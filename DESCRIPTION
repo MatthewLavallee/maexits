@@ -1,0 +1,40 @@
+Package: maexitsv2
+Title: Medicare Advantage Plan Exits and Forced Disenrollment
+Version: 0.2.0
+Authors@R:
+    person("Matthew", "Lavallee", , "mlavall3@jh.edu", role = c("aut", "cre"))
+Description: Measures Medicare Advantage (MA) plan exits and the resulting
+    forced disenrollment for each December-to-January transition, using CMS
+    Monthly Enrollment by Contract/Plan/State/County files, MA landscape
+    files, and Part C&D Plan Crosswalks to separate exits
+    (terminations, non-renewals, and service-area reductions that drop a
+    county) from consolidations and renewals. Provides loaders for the
+    processed plan-by-county and county-by-year datasets (downloaded once
+    from the package's GitHub data release and cached) and for any month of
+    CMS enrollment, filterable by plan, year or month, state, county, and
+    variable, plus the pipeline that builds the datasets from the raw CMS
+    and NBER files.
+License: MIT + file LICENSE
+URL: https://github.com/MatthewLavallee/maexits
+BugReports: https://github.com/MatthewLavallee/maexits/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends:
+    R (>= 4.1.0),
+    data.table
+Imports:
+    datasets,
+    here,
+    stats,
+    tools,
+    utils
+Suggests:
+    fixest,
+    kableExtra,
+    knitr,
+    modelsummary,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3

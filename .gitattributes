@@ -1,0 +1,7 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Treat data/archive artifacts as binary (no EOL normalization, no diffs)
+*.zip   binary
+*.xlsx  binary
+*.csv   -text

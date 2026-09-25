@@ -1,0 +1,17 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.claude$
+^\.github$
+^\.DS_Store$
+^\.Rhistory$
+^LICENSE\.md$
+^raw$
+^trunk$
+^matt_analysis$
+^provenance$
+^reports$
+^derived_data\.zip$
+^DATA_DICTIONARY\.md$
+^Monthly_Report_By_Plan_.*\.xlsx$
+^.*\.tar\.gz$
+^maexitsv2\.Rcheck$

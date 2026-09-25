@@ -1,0 +1,7 @@
+# Derived tables of data release data-2018-2025, reproduced byte-for-byte from raw/ with zero warnings, 2026-09-25
+05314041e6c67b33d61a47eaf74f0dff trunk/derived/analytictable.csv
+87b02e0e0c48ba9c6a20cde668e7d2f6 trunk/derived/analytictable_augmented.csv
+b6482cd7b595a225e62b6a47efb3c3cf trunk/derived/county_panel.csv
+e679fcfaa7e4b97a9d846f63492fe780 trunk/derived/december_enrollment.csv
+276297fde14be367f32554ca7473b5d8 trunk/derived/january_enrollment.csv
+85b9da944a240f96f452f7d2f2cf4e64 trunk/derived/landscape.csv
