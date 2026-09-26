@@ -5,7 +5,8 @@
 \title{Load a Processed Dataset}
 \usage{
 maexits_data(
-  dataset = c("county_panel", "plan_county", "landscape", "enrollment"),
+  dataset = c("county_panel", "plan_county", "displacement", "plan_details", "landscape",
+    "enrollment"),
   plans = NULL,
   years = NULL,
   months = NULL,
@@ -17,15 +18,15 @@ maexits_data(
 )
 }
 \arguments{
-\item{dataset}{One of \code{"county_panel"}, \code{"plan_county"}, \code{"landscape"},
-\code{"enrollment"}.}
+\item{dataset}{One of \code{"county_panel"}, \code{"plan_county"}, \code{"displacement"},
+\code{"plan_details"}, \code{"landscape"}, \code{"enrollment"}.}
 
 \item{plans}{Plans to keep: \code{"H1234-001"} for one plan, \code{"H1234"} for
 every plan in a contract. Not available for the county panel.}
 
-\item{years}{Years to keep: \code{dec_year} for \code{county_panel} and
-\code{plan_county}, contract year for \code{landscape}, calendar year for
-\code{enrollment}.}
+\item{years}{Years to keep: \code{dec_year} for \code{county_panel},
+\code{plan_county} and \code{displacement}, contract year for \code{plan_details} and
+\code{landscape}, calendar year for \code{enrollment}.}
 
 \item{months}{\code{enrollment} only: months as \code{"YYYY-MM"} strings or Dates.}
 
@@ -64,6 +65,14 @@ penetration, benchmark.
 \item \code{"plan_county"} (\link{plan_county}): plan x county x transition year, one
 row per crosswalk link. Crosswalk status, December and January
 enrollment, forced-exit flags, role.
+\item \code{"displacement"} (\link{displacement}): one row per December plan x county,
+with its December enrollment, what happened to it in January
+(\code{outcome}, \code{lost_coverage}), how far the exit reached, the county's
+plans next January, and the plan's details. Built for counting who
+lost their plan; each plan-county appears once.
+\item \code{"plan_details"} (\link{plan_details}): plan x segment x contract year:
+organization and parent, premiums, deductible, out-of-pocket maximum,
+star ratings, SNP details.
 \item \code{"landscape"} (\link{landscape}): plan service areas by contract year, with
 plan type, SNP type and D-SNP integration status.
 \item \code{"enrollment"} (\link{enrollment}): the December and January plan x county

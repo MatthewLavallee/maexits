@@ -3,10 +3,12 @@
 #' @section Loading data:
 #' * [maexits_catalog()] lists the datasets and their variables, with a
 #'   `counting` note on variables whose values repeat across rows. Each
-#'   dataset also has a help page: [county_panel], [plan_county],
-#'   [landscape], [enrollment], [cms_enrollment_data].
-#' * [maexits_data()] loads the pipeline's processed tables (county panel,
-#'   plan-by-county exits, landscape, December/January enrollment),
+#'   dataset also has a help page: [displacement], [plan_details],
+#'   [county_panel], [plan_county], [landscape], [enrollment],
+#'   [cms_enrollment_data].
+#' * [maexits_data()] loads the pipeline's processed tables (who lost their
+#'   plan each year, plan details, county panel, plan-by-county exits,
+#'   landscape, December/January enrollment),
 #'   downloading them once from the package's GitHub data release.
 #' * [cms_enrollment()] loads CMS Monthly Enrollment by
 #'   Contract/Plan/State/County for any month from December 2019,
@@ -18,8 +20,8 @@
 #' @section Building data:
 #' Building from the raw CMS and NBER files needs a clone of the
 #' repository with `raw/` in place: see [check_inputs()],
-#' [run_data_pipeline()] and [run_preliminary()], and the README's
-#' "Annual update" runbook.
+#' [run_data_pipeline()] and [run_preliminary()], and the "Annual update"
+#' runbook in PIPELINE.md.
 #'
 #' @section Knowing when new files are out:
 #' [check_cms_releases()] checks whether next cycle's crosswalk, landscape,

@@ -616,7 +616,7 @@ make_county_panel <- function(at = NULL, save = TRUE) {
 #' Runs all data construction steps in order, passing in-memory
 #' data.tables between steps. Inputs are checked first
 #' (\code{check_inputs()}), every step runs its validation checks, and
-#' nothing is written until the whole run has succeeded; the six derived
+#' nothing is written until the whole run has succeeded; the eight derived
 #' tables are then written to a staging folder and moved into
 #' \code{out_dir} together, so a failed run never leaves a mix of old and
 #' new files.
@@ -661,6 +661,13 @@ run_data_pipeline <- function(save = TRUE, verbose = TRUE,
   message("\n=== Step 7: Building county panel ===")
   panel <- make_county_panel(at_aug, save = FALSE)
 
+  message("\n=== Step 8: Building plan details ===")
+  details <- make_plan_details(years = .plan_detail_years(xwalk_years), save = FALSE)
+
+  message("\n=== Step 9: Building displacement table ===")
+  displacement <- make_displacement(at_aug, landscape = landscape, plan_details = details,
+                                    panel = panel, save = FALSE)
+
   if (save) {
     # analytictable.csv holds the table after FIPS and penetration (no
     # benchmark), as in the step-by-step path.
@@ -670,7 +677,9 @@ run_data_pipeline <- function(save = TRUE, verbose = TRUE,
       landscape = landscape,
       analytictable = at_fp,
       analytictable_augmented = at_aug,
-      county_panel = panel
+      county_panel = panel,
+      plan_details = details,
+      displacement = displacement
     ), out_dir)
   }
 

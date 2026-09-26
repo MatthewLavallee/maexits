@@ -5,3 +5,5 @@ b6482cd7b595a225e62b6a47efb3c3cf trunk/derived/county_panel.csv
 e679fcfaa7e4b97a9d846f63492fe780 trunk/derived/december_enrollment.csv
 276297fde14be367f32554ca7473b5d8 trunk/derived/january_enrollment.csv
 85b9da944a240f96f452f7d2f2cf4e64 trunk/derived/landscape.csv
+da3433529bed7597a749d553dc35c7a6 trunk/derived/displacement.csv
+6d7865c5762f193f05a65de35f6d9a2b trunk/derived/plan_details.csv

@@ -2,7 +2,7 @@
 % Please edit documentation in R/catalog.R
 \name{.catalog_table}
 \alias{.catalog_table}
-\title{The variable key}
+\title{The variable key (internal table)}
 \usage{
 .catalog_table()
 }
@@ -10,6 +10,6 @@
 data.table with dataset, variable, description, counting.
 }
 \description{
-The variable key
+The variable key (internal table)
 }
 \keyword{internal}

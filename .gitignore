@@ -1,6 +1,6 @@
-# ── Raw CMS source data (public; see README "Data Sources") ────────────
+# ── Raw CMS source data (public; see PIPELINE.md "Data Sources") ───────
 # ~4.3 GB of CMS / NBER public-use files. Not tracked in git.
-# Download and place them per the README to rebuild from scratch.
+# Download and place them per PIPELINE.md to rebuild from scratch.
 /raw/
 
 # ── Derived data ───────────────────────────────────────────────────────

@@ -53,6 +53,10 @@ test_that("repeated-value columns get a one-time note pointing to the key", {
   expect_no_message(maexits_data("plan_county"))
   clear_session()
   expect_no_message(maexits_data("plan_county", variables = "status"))
+  # Notes come from the requested dataset's own variable key
+  clear_session()
+  expect_no_message(maexitsv2:::.note_counting("displacement", c("dec_year", "dec_enrollment")))
+  expect_message(maexitsv2:::.note_counting("displacement", "plan_exits"), "\\(plan_exits\\)")
   clear_session()
   withr::local_options(maexits.counting_note = FALSE)
   expect_no_message(maexits_data("plan_county"))
@@ -81,6 +85,20 @@ test_that("bad requests give actionable errors", {
   expect_error(maexits_data("county_panel", states = "ZZ"), "unknown state abbreviation")
   expect_error(maexits_data("landscape"), "has no landscape dataset")
   expect_error(maexits_catalog("nope"), "unknown dataset")
+  expect_error(maexits_data("plan_details", states = "MD"), "has no counties")
+})
+
+test_that("a dataset added to a release after its manifest was cached is found", {
+  rel <- local_fake_release()
+  suppressMessages(maexits_data("county_panel"))       # caches the manifest
+  saveRDS(data.frame(year = 2026L, plan_key = "H0001-001"), file.path(rel, "plan_details.rds"))
+  f <- file.path(rel, "plan_details.rds")
+  man <- utils::read.csv(file.path(rel, "manifest.csv"), stringsAsFactors = FALSE)
+  man <- rbind(man, data.frame(dataset = "plan_details", file = basename(f), rows = 1L, columns = 2L,
+                               bytes = file.size(f), md5 = unname(tools::md5sum(f))))
+  utils::write.csv(man, file.path(rel, "manifest.csv"), row.names = FALSE)
+  expect_equal(suppressMessages(maexits_data("plan_details"))$plan_key, "H0001-001")
+  expect_error(maexits_data("landscape"), "has no landscape dataset")
 })
 
 test_that("a corrupt download is rejected", {
@@ -148,4 +166,15 @@ test_that("cms_enrollment parses a CMS zip, joins contract info, and filters", {
   expect_equal(names(y), c(.CMS_KEYS, "enrollment"))
   expect_true(file.exists(file.path(cache, "cms", "cpsc_2025_09.rds")))
   expect_error(cms_enrollment("2018-06"), "older file names")
+})
+
+test_that("release files mark text as UTF-8 and refuse invalid bytes", {
+  mas <- "Medicare y Mucho M\xc3\xa1s"                     # UTF-8 bytes, unmarked
+  dt <- data.table(plan_name = c(mas, "Plan A", NA), outcome = factor(c(mas, "b", "b")), n = 1:3)
+  .mark_utf8(dt)
+  expect_equal(Encoding(dt$plan_name[1]), "UTF-8")
+  expect_equal(Encoding(levels(dt$outcome)[1]), "UTF-8")
+  expect_equal(charToRaw(dt$plan_name[1]), charToRaw(mas))  # bytes unchanged
+  expect_true(is.na(dt$plan_name[3]))
+  expect_error(.mark_utf8(data.table(x = "M\xe1s")), "not valid UTF-8")
 })

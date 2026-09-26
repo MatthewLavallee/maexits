@@ -6,17 +6,19 @@
 \alias{maexitsv2-package}
 \title{maexitsv2: Medicare Advantage Plan Exits and Forced Disenrollment}
 \description{
-Measures Medicare Advantage (MA) plan exits and the resulting forced disenrollment for each December-to-January transition, using CMS Monthly Enrollment by Contract/Plan/State/County files, MA landscape files, and Part C&D Plan Crosswalks to separate exits (terminations, non-renewals, and service-area reductions that drop a county) from consolidations and renewals. Provides loaders for the processed plan-by-county and county-by-year datasets (downloaded once from the package's GitHub data release and cached) and for any month of CMS enrollment, filterable by plan, year or month, state, county, and variable, plus the pipeline that builds the datasets from the raw CMS and NBER files.
+Measures Medicare Advantage (MA) plan exits and the resulting forced disenrollment for each December-to-January transition, using CMS Monthly Enrollment by Contract/Plan/State/County files, MA landscape files, and Part C&D Plan Crosswalks to separate exits (terminations, non-renewals, and service-area reductions that drop a county) from consolidations and renewals. Provides loaders for the processed datasets (who lost their plan each year, plan details, plan-by-county exits and a county-by-year panel; downloaded once from the package's GitHub data release and cached) and for any month of CMS enrollment, filterable by plan, year or month, state, county, and variable, plus the pipeline that builds the datasets from the raw CMS and NBER files.
 }
 \section{Loading data}{
 
 \itemize{
 \item \code{\link[=maexits_catalog]{maexits_catalog()}} lists the datasets and their variables, with a
 \code{counting} note on variables whose values repeat across rows. Each
-dataset also has a help page: \link{county_panel}, \link{plan_county},
-\link{landscape}, \link{enrollment}, \link{cms_enrollment_data}.
-\item \code{\link[=maexits_data]{maexits_data()}} loads the pipeline's processed tables (county panel,
-plan-by-county exits, landscape, December/January enrollment),
+dataset also has a help page: \link{displacement}, \link{plan_details},
+\link{county_panel}, \link{plan_county}, \link{landscape}, \link{enrollment},
+\link{cms_enrollment_data}.
+\item \code{\link[=maexits_data]{maexits_data()}} loads the pipeline's processed tables (who lost their
+plan each year, plan details, county panel, plan-by-county exits,
+landscape, December/January enrollment),
 downloading them once from the package's GitHub data release.
 \item \code{\link[=cms_enrollment]{cms_enrollment()}} loads CMS Monthly Enrollment by
 Contract/Plan/State/County for any month from December 2019,
@@ -31,8 +33,8 @@ and cache downloads in \code{\link[=maexits_cache_dir]{maexits_cache_dir()}}.
 
 Building from the raw CMS and NBER files needs a clone of the
 repository with \verb{raw/} in place: see \code{\link[=check_inputs]{check_inputs()}},
-\code{\link[=run_data_pipeline]{run_data_pipeline()}} and \code{\link[=run_preliminary]{run_preliminary()}}, and the README's
-"Annual update" runbook.
+\code{\link[=run_data_pipeline]{run_data_pipeline()}} and \code{\link[=run_preliminary]{run_preliminary()}}, and the "Annual update"
+runbook in PIPELINE.md.
 }
 
 \section{Knowing when new files are out}{

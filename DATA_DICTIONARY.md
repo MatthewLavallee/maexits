@@ -1,6 +1,6 @@
 # Data Dictionary
 
-The package loads these tables with `maexits_data()`. Each has a help page listing every column (`?county_panel`, `?plan_county`, `?landscape`, `?enrollment`), and `maexits_catalog()` returns the same list as a table. This file gives more detail on how each column is built. `plan_county` is `analytictable_augmented.csv` with `plan_key` and `curr_plan_key` added.
+The package loads these tables with `maexits_data()`. Each has a help page listing every column (`?county_panel`, `?plan_county`, `?displacement`, `?plan_details`, `?landscape`, `?enrollment`), and `maexits_catalog()` returns the same list as a table. This file gives more detail on how each column is built. `plan_county` is `analytictable_augmented.csv` with `plan_key` and `curr_plan_key` added.
 
 ## Rows are crosswalk links
 
@@ -77,6 +77,51 @@ New-plan and January-only rows have no December values (`dec_src` NA) and use th
 | `jan_enrollment_once` | numeric | `jan_enrollment` on the `jan_first` link, 0 on the other links to the same successor plan-county. | |
 | `jan_enrollment_split` | numeric | `jan_enrollment / curr_links`. | |
 | `curr_is_incumbent` | logical | TRUE when a December plan in the county continues into this successor plan-county (some link to it is continuing and its successor serves the county). NA on terminated and dropped-county links. | |
+
+## displacement.csv (`displacement`)
+
+One row per December plan × county (`dec_year`, `contract_id`, `plan_id`, `county_name`, `state_name`) for every December plan-county in `plan_county`, built by `make_displacement()`. It answers "how many people lost their plan, and how": each plan-county appears once, so `sum(dec_enrollment)` counts every December enrollee once, and `sum(dec_enrollment[lost_coverage])` is the enrollment that lost coverage. Every column is described in `?displacement` and `maexits_catalog("displacement")`.
+
+**Outcome.** The crosswalk links of each December plan-county are ranked, and the first link whose January plan serves the county sets the outcome. If none serves the county, `lost_coverage` is TRUE and the outcome gives the reason:
+
+| outcome | lost coverage | meaning |
+|---|---|---|
+| `renewed` | no | The same plan continues in the county |
+| `renewed_sae` | no | The same plan continues and expanded its service area elsewhere |
+| `renewed_sar_kept_county` | no | The same plan cut its service area elsewhere but kept this county |
+| `consolidated_same_plan_id` | no | The plan kept its ID and absorbed other plans |
+| `moved_plan_same_contract` | no | Enrollees moved to another plan of the same contract that serves the county |
+| `moved_contract` | no | Enrollees moved to a plan of another contract that serves the county |
+| `moved_new_plan` | no | Enrollees moved to a new plan that serves the county |
+| `terminated_contract_listed` | yes | The plan was terminated; the contract still offers plans in January |
+| `terminated_contract_gone` | yes | The plan was terminated; the contract offers no plan in January |
+| `new_plan_not_in_county` | yes | Mapped only to new plans that do not serve the county |
+| `sar_dropped_county` | yes | The plan continues but dropped this county |
+| `sar_successor_not_in_county` | yes | A service-area-reduction link to another plan that does not serve the county |
+| `moved_plan_not_in_county` | yes | Moved to another plan of the same contract that does not serve the county |
+| `moved_contract_not_in_county` | yes | Moved to another contract's plan that does not serve the county |
+| `renewal_not_listed_in_county` | yes | Renewed, but the January landscape does not list the plan in the county; in most of these the plan still reports January enrollment there |
+
+`lost_coverage` equals `forced_county` in `plan_county`, and the county totals equal `county_panel`'s `_once` columns. Terminations are split by whether the contract is in the January landscape, because from the 2024 crosswalk on CMS labels every termination "Terminated/Non-renewed Contract"; the crosswalk statuses are kept in `xwalk_statuses`.
+
+**Scope and alternatives.** `plan_exits` (the plan left every county), `contract_exits` (the contract offers no plan in January), `contract_exits_county`, `parent_exits_county` (no plan of the same parent organization in the county in January; parents are matched on their December and January names from CPSC Contract Info), and counts of the county's plans next January (`n_plans_jan`: non-SNP, non-Cost plans; `n_plans_jan_other_parent`; `n_parents_jan`; `n_same_snp_type_jan` for SNPs). Plan-, contract- and county-level columns repeat on every row of their plan or county.
+
+## plan_details.csv (`plan_details`)
+
+One row per contract year × contract × plan × segment, CY2018 on, built by `make_plan_details()` from the landscape files, the Part D Plan and Premium reports (CY2018–2024, `MAEXITS_PARTD_REPORT_FILES` in `R/config.R`) and CPSC Contract Info (December of the contract year, else January). `displacement` carries the same columns for each December plan. Coverage by year:
+
+| Columns | Years | Notes |
+|---|---|---|
+| `parent_org`, organization names, `org_type`, `plan_type_group`, `part_d` | all | CPSC Contract Info |
+| `premium_total`, `premium_part_c`, Part D premiums, `part_d_deductible`, `drug_benefit_type` | all | Monthly dollars (deductible annual). Without Part D, the Part C premium is the consolidated premium |
+| `moop_in_network` | all | NA for PFFS, MSA and Cost plans, and for every SNP before CY2025 (the SNP landscape files have no MOOP column) |
+| `star_overall`, `star_status` | CY2018–2025 | Blank in the registered CY2026 landscape file |
+| `star_part_c`, `star_part_d` | CY2024 on | |
+| `dsnp_integration`, `dsnp_aip` | CY2023 on | |
+| `snp_institutional_type`, `zero_dollar_dsnp` | CY2025 on | |
+| `gap_coverage` | to CY2024 | |
+
+Supplemental benefits (dental, vision, hearing, over-the-counter), the Part B premium reduction and copays are not in these files; they are in the CMS Plan Benefit Package data.
 
 ## county_panel.csv
 

@@ -15,8 +15,9 @@
 #'
 #' Maintainer tool. Reads the derived tables in `derived_dir` and writes, to
 #' `out_dir`, the compressed files that [maexits_data()] downloads
-#' (`county_panel.rds`, `plan_county.rds`, `landscape.rds`,
-#' `enrollment.rds`) and a `manifest.csv` with row counts and md5
+#' (`county_panel.rds`, `plan_county.rds`, `displacement.rds`,
+#' `plan_details.rds`, `landscape.rds`, `enrollment.rds`) and a
+#' `manifest.csv` with row counts and md5
 #' checksums. It adds a `plan_key` column ("H1234-001") to the plan-level
 #' tables and a `fips` column to the landscape and enrollment tables. Values
 #' are otherwise unchanged. Needs `raw/` for the FIPS lookup.
@@ -53,6 +54,17 @@ prepare_data_release <- function(out_dir, derived_dir = here("trunk", "derived")
   setcolorder(plan_county, "curr_plan_key", after = "curr_plan_id")
   tables$plan_county <- plan_county
 
+  displacement <- add_plan_key(fread(src("displacement.csv"), na.strings = c("", "NA")))
+  displacement[, outcome := factor(outcome, levels = .DISPLACEMENT_OUTCOMES)]
+  displacement[, contract_effective_date := as.Date(contract_effective_date)]
+  displacement[, successor_plan_key := fifelse(is.na(successor_plan_id), NA_character_,
+    sprintf("%s-%03d", successor_contract_id, as.integer(successor_plan_id)))]
+  setcolorder(displacement, "successor_plan_key", after = "successor_plan_id")
+  tables$displacement <- displacement
+  details <- fread(src("plan_details.csv"), na.strings = c("", "NA"))
+  details[, contract_effective_date := as.Date(contract_effective_date)]
+  tables$plan_details <- add_plan_key(details)
+
   landscape <- fread(src("landscape.csv"))
   attach_fips(landscape)
   tables$landscape <- add_plan_key(landscape)
@@ -71,7 +83,7 @@ prepare_data_release <- function(out_dir, derived_dir = here("trunk", "derived")
   manifest <- do.call(rbind, lapply(names(tables), function(nm) {
     file <- .DATASETS[[nm]]$file
     path <- file.path(out_dir, file)
-    saveRDS(as.data.frame(tables[[nm]]), path, compress = "xz")
+    saveRDS(as.data.frame(.mark_utf8(tables[[nm]])), path, compress = "xz")
     data.frame(dataset = nm, file = file, rows = nrow(tables[[nm]]),
                columns = ncol(tables[[nm]]), bytes = file.size(path),
                md5 = unname(tools::md5sum(path)), release = release,
@@ -81,4 +93,33 @@ prepare_data_release <- function(out_dir, derived_dir = here("trunk", "derived")
   utils::write.csv(manifest, file.path(out_dir, "manifest.csv"), row.names = FALSE)
   message("Wrote ", nrow(manifest), " datasets and manifest.csv to ", out_dir)
   invisible(manifest)
+}
+
+
+#' Mark a table's text as UTF-8
+#'
+#' [data.table::fread()] leaves text unmarked, and [saveRDS()] records
+#' unmarked text in the session's own encoding, so a file written in one
+#' locale warns on every non-ASCII value ("Medicare y Mucho Más") when read
+#' in another. The derived tables are UTF-8, so only the mark is set; the
+#' bytes are unchanged.
+#'
+#' @param dt A data.table; changed by reference.
+#' @return `dt`, invisibly.
+#' @keywords internal
+.mark_utf8 <- function(dt) {
+  for (v in names(dt)) {
+    x <- dt[[v]]
+    s <- if (is.factor(x)) levels(x) else if (is.character(x)) x else next
+    bad <- !is.na(s) & !validUTF8(s)
+    if (any(bad))
+      stop("[release] column ", v, " has text that is not valid UTF-8, e.g. \"",
+           iconv(s[bad][1], "UTF-8", "UTF-8", sub = "byte"), "\"", call. = FALSE)
+    Encoding(s) <- "UTF-8"
+    if (is.factor(x)) {
+      levels(x) <- s
+      set(dt, j = v, value = x)
+    } else set(dt, j = v, value = s)
+  }
+  invisible(dt)
 }

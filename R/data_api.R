@@ -34,7 +34,16 @@
     file = "enrollment.rds", year_col = "year", plans = TRUE, months = TRUE,
     keys = c("month", "contract_id", "plan_id", "plan_key", "county_name",
              "state_name", "fips"),
-    title = "December and January plan x county enrollment as used by the pipeline")
+    title = "December and January plan x county enrollment as used by the pipeline"),
+  displacement = list(
+    file = "displacement.rds", year_col = "dec_year", plans = TRUE, months = FALSE,
+    keys = c("dec_year", "contract_id", "plan_id", "plan_key", "segment_id",
+             "county_name", "state_name", "fips"),
+    title = "December plan x county: outcome in January, lost coverage, plan details"),
+  plan_details = list(
+    file = "plan_details.rds", year_col = "year", plans = TRUE, months = FALSE, geo = FALSE,
+    keys = c("year", "contract_id", "plan_id", "plan_key", "segment_id"),
+    title = "Plan x segment x contract year: organization, premiums, MOOP, stars, SNP details")
 )
 
 .CMS_KEYS <- c("month", "contract_id", "plan_id", "plan_key", "state", "county", "fips")
@@ -65,6 +74,14 @@
 #' * `"plan_county"` ([plan_county]): plan x county x transition year, one
 #'   row per crosswalk link. Crosswalk status, December and January
 #'   enrollment, forced-exit flags, role.
+#' * `"displacement"` ([displacement]): one row per December plan x county,
+#'   with its December enrollment, what happened to it in January
+#'   (`outcome`, `lost_coverage`), how far the exit reached, the county's
+#'   plans next January, and the plan's details. Built for counting who
+#'   lost their plan; each plan-county appears once.
+#' * `"plan_details"` ([plan_details]): plan x segment x contract year:
+#'   organization and parent, premiums, deductible, out-of-pocket maximum,
+#'   star ratings, SNP details.
 #' * `"landscape"` ([landscape]): plan service areas by contract year, with
 #'   plan type, SNP type and D-SNP integration status.
 #' * `"enrollment"` ([enrollment]): the December and January plan x county
@@ -80,13 +97,13 @@
 #' count each plan-county once (see the "Counting rows" section of
 #' [plan_county]).
 #'
-#' @param dataset One of `"county_panel"`, `"plan_county"`, `"landscape"`,
-#'   `"enrollment"`.
+#' @param dataset One of `"county_panel"`, `"plan_county"`, `"displacement"`,
+#'   `"plan_details"`, `"landscape"`, `"enrollment"`.
 #' @param plans Plans to keep: `"H1234-001"` for one plan, `"H1234"` for
 #'   every plan in a contract. Not available for the county panel.
-#' @param years Years to keep: `dec_year` for `county_panel` and
-#'   `plan_county`, contract year for `landscape`, calendar year for
-#'   `enrollment`.
+#' @param years Years to keep: `dec_year` for `county_panel`,
+#'   `plan_county` and `displacement`, contract year for `plan_details` and
+#'   `landscape`, calendar year for `enrollment`.
 #' @param months `enrollment` only: months as `"YYYY-MM"` strings or Dates.
 #' @param states State names or postal abbreviations (`"MD"`, `"Maryland"`).
 #' @param counties County FIPS codes (`24005` or `"24005"`) or county names
@@ -114,7 +131,8 @@
 #' maexits_data("enrollment", months = "2025-12", counties = 24005)
 #' }
 #' @export
-maexits_data <- function(dataset = c("county_panel", "plan_county", "landscape", "enrollment"),
+maexits_data <- function(dataset = c("county_panel", "plan_county", "displacement",
+                                     "plan_details", "landscape", "enrollment"),
                          plans = NULL, years = NULL, months = NULL, states = NULL,
                          counties = NULL, variables = NULL,
                          release = MAEXITS_DATA_RELEASE, refresh = FALSE) {
@@ -125,6 +143,10 @@ maexits_data <- function(dataset = c("county_panel", "plan_county", "landscape",
   }
   if (!is.null(months) && !spec$months) {
     .api_stop("months applies to the enrollment dataset and cms_enrollment(); use years for %s", dataset)
+  }
+  if (isFALSE(spec$geo) && (!is.null(states) || !is.null(counties))) {
+    .api_stop("%s has no counties (one row per plan segment); filter displacement by state or county instead",
+              dataset)
   }
   dt <- .load_release_table(dataset, release, refresh)
   dt <- .apply_filters(dt, plans = plans, years = years, year_col = spec$year_col,
@@ -140,18 +162,17 @@ maexits_data <- function(dataset = c("county_panel", "plan_county", "landscape",
 # repeat across rows (the `counting` column of the variable key).
 .note_counting <- function(dataset, cols) {
   key <- .catalog_table()
-  key <- key[key$dataset == dataset & key$counting != "" & key$variable %in% cols]
+  want <- dataset   # "dataset" inside key[...] would mean the column
+  key <- key[key$dataset == want & key$counting != "" & key$variable %in% cols]
   seen <- .maexits_session$counting_noted
   if (!nrow(key) || dataset %in% seen || isFALSE(getOption("maexits.counting_note", TRUE))) {
     return(invisible())
   }
   .maexits_session$counting_noted <- c(seen, dataset)
   message(sprintf(paste0(
-    "Note: some columns (%s) repeat across crosswalk links or are built from ",
-    "sums over them. See ?%s (\"Counting rows\") or ",
-    "maexits_catalog(\"%s\")$counting for the matching columns that count ",
-    "each plan-county once. options(maexits.counting_note = FALSE) ",
-    "turns this note off."),
+    "Note: some columns (%s) repeat across rows or are built from sums over ",
+    "them. See ?%s or maexits_catalog(\"%s\")$counting for how to add them ",
+    "up. options(maexits.counting_note = FALSE) turns this note off."),
     paste(key$variable, collapse = ", "), dataset, dataset))
 }
 
@@ -212,6 +233,8 @@ maexits_clear_cache <- function(what = c("all", "releases", "cms")) {
 
 .release_file <- function(dataset, release, refresh) {
   manifest <- .release_manifest(release, refresh)
+  # A release can gain datasets after its manifest was cached: check it again
+  if (!refresh && !dataset %in% manifest$dataset) manifest <- .release_manifest(release, TRUE)
   row <- manifest[manifest$dataset == dataset, , drop = FALSE]
   if (nrow(row) != 1) .api_stop("data release %s has no %s dataset", release, dataset)
   dest <- file.path(maexits_cache_dir(), "releases", release, row$file)

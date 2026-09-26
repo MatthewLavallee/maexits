@@ -9,7 +9,8 @@ Description: Measures Medicare Advantage (MA) plan exits and the resulting
     files, and Part C&D Plan Crosswalks to separate exits
     (terminations, non-renewals, and service-area reductions that drop a
     county) from consolidations and renewals. Provides loaders for the
-    processed plan-by-county and county-by-year datasets (downloaded once
+    processed datasets (who lost their plan each year, plan details,
+    plan-by-county exits and a county-by-year panel; downloaded once
     from the package's GitHub data release and cached) and for any month of
     CMS enrollment, filterable by plan, year or month, state, county, and
     variable, plus the pipeline that builds the datasets from the raw CMS

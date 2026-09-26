@@ -91,6 +91,34 @@ check_inputs <- function(xwalk_years = MAEXITS_XWALK_YEARS) {
     rb <- here("raw", "ratebook", sprintf("countyrate%d.csv", n - 1L))
     if (!file.exists(rb)) problems <- c(problems, sprintf(
       "ratebook countyrate%d.csv not found (download from NBER)", n - 1L))
+    # Organizations and parents for plan details and the displacement table
+    for (spec in list(list("december enrollment", n - 1L, 12L),
+                      list("january enrollment", n, 1L))) {
+      want <- sprintf("^CPSC_Contract_Info_%d_%02d\\.csv$", spec[[2]], spec[[3]])
+      hits <- list.files(here("raw", spec[[1]]), pattern = want, recursive = TRUE)
+      if (!length(hits)) {
+        problems <- c(problems, sprintf("raw/%s: CPSC_Contract_Info_%d_%02d.csv not found",
+                                        spec[[1]], spec[[2]], spec[[3]]))
+      } else if (length(hits) > 1) {
+        problems <- c(problems, sprintf("raw/%s: %d copies of CPSC_Contract_Info_%d_%02d.csv",
+                                        spec[[1]], length(hits), spec[[2]], spec[[3]]))
+      }
+    }
+  }
+  for (cy in .plan_detail_years(xwalk_years)) {
+    key <- as.character(cy)
+    # Part D premiums come from the report to CY2024 (and any later year
+    # registered there), from the combined landscape after that
+    if (cy <= 2024L || key %in% names(MAEXITS_PARTD_REPORT_FILES)) {
+      if (!key %in% names(MAEXITS_PARTD_REPORT_FILES)) {
+        problems <- c(problems, sprintf(
+          "Part D premium report for CY%d is not registered in MAEXITS_PARTD_REPORT_FILES", cy))
+      } else {
+        f <- here("raw", "landscape", MAEXITS_PARTD_REPORT_FILES[[key]])
+        if (!all(file.exists(f))) problems <- c(problems, sprintf(
+          "Part D premium report for CY%d not found: %s", cy, paste(f[!file.exists(f)], collapse = ", ")))
+      }
+    }
   }
   for (f in c(MAEXITS_FIPS_LOOKUP_FILE, MAEXITS_PENETRATION_FILE)) {
     if (!file.exists(here("raw", f))) problems <- c(problems,
