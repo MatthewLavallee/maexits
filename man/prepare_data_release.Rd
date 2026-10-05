@@ -23,7 +23,7 @@ Invisibly, the manifest as a data.frame.
 \description{
 Maintainer tool. Reads the derived tables in \code{derived_dir} and writes, to
 \code{out_dir}, the compressed files that \code{\link[=maexits_data]{maexits_data()}} downloads
-(\code{county_panel.rds}, \code{plan_county.rds}, \code{displacement.rds},
+(\code{county_panel.rds}, \code{plan_county.rds}, \code{displacement.rds}, \code{exits.rds},
 \code{plan_details.rds}, \code{landscape.rds}, \code{enrollment.rds}) and a
 \code{manifest.csv} with row counts and md5
 checksums. It adds a \code{plan_key} column ("H1234-001") to the plan-level

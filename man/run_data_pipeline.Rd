@@ -8,7 +8,8 @@ run_data_pipeline(
   save = TRUE,
   verbose = TRUE,
   xwalk_years = MAEXITS_XWALK_YEARS,
-  out_dir = here("trunk", "derived")
+  out_dir = here("trunk", "derived"),
+  exits_years = MAEXITS_EXITS_YEARS
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ printed during augmentation.}
 
 \item{out_dir}{Folder for the derived tables (default
 \code{trunk/derived}). Point it elsewhere for a trial run.}
+
+\item{exits_years}{Crosswalk years of the exits table (default
+\code{MAEXITS_EXITS_YEARS}); must include \code{xwalk_years}.}
 }
 \value{
 Invisibly returns the final county-year panel data.table.
@@ -30,7 +34,7 @@ Invisibly returns the final county-year panel data.table.
 Runs all data construction steps in order, passing in-memory
 data.tables between steps. Inputs are checked first
 (\code{check_inputs()}), every step runs its validation checks, and
-nothing is written until the whole run has succeeded; the eight derived
+nothing is written until the whole run has succeeded; the nine derived
 tables are then written to a staging folder and moved into
 \code{out_dir} together, so a failed run never leaves a mix of old and
 new files.

@@ -8,9 +8,11 @@
 #   release_check_status()     what the daily check has seen so far
 #   unschedule_release_check() stop the daily check
 #
-# The files watched follow from R/config.R: the crosswalk and landscape for
-# the first year not yet registered, and the December and January CPSC
-# months and NBER ratebook for the next transition. A check only reads the
+# The files watched follow from R/config.R: the five files the next
+# transition (December N-1 -> January N, N the first year not in
+# MAEXITS_XWALK_YEARS) needs. Files already registered in R/config.R or
+# already in raw/ are reported as done and not checked, so the check moves
+# on to the next cycle only once N is added to MAEXITS_XWALK_YEARS. It only reads the
 # CMS/NBER pages in MAEXITS_WATCH_SOURCES and sends HEAD requests to the
 # file links they list. It never follows redirects (CMS redirects some
 # predictable file URLs to different files) and never downloads or
@@ -26,6 +28,7 @@
 #             page where a file should be)
 #   broken    the page loaded but last year's file was not found either,
 #             so the page has probably changed and the check needs updating
+#   done      registered in R/config.R or already in raw/; not checked
 # ============================================================
 
 
@@ -41,13 +44,14 @@
 
 #' Files the next cycle needs, from R/config.R
 #' @return data.table with target, edition (year or "YYYY-MM"), label,
-#'   overdue (date after which a missing file is flagged) and next_step.
+#'   overdue (date after which a missing file is flagged), next_step and
+#'   done (why the file needs no check, or NA).
 #' @keywords internal
 .watch_targets <- function() {
-  xw <- max(as.integer(names(MAEXITS_XWALK_FILES))) + 1L
-  cy <- max(as.integer(names(MAEXITS_LANDSCAPE_FILES))) + 1L
+  # One cycle at a time: everything the December n-1 -> January n transition needs
   n <- max(as.integer(MAEXITS_XWALK_YEARS)) + 1L
-  data.table(
+  xw <- cy <- n
+  tg <- data.table(
     target = .WATCH_TARGETS,
     edition = c(xw, cy, sprintf("%d-12", n - 1L), sprintf("%d-01", n), n - 1L),
     label = c(sprintf("%d Part C&D Plan Crosswalk", xw),
@@ -70,6 +74,33 @@
                      "MAEXITS_XWALK_YEARS, then check_inputs() and run_data_pipeline()."), n, n),
       sprintf("Download countyrate%d.csv into raw/ratebook/.", n - 1L))
   )
+  tg[, done := mapply(.target_done, target, edition, USE.NAMES = FALSE)]
+  tg[]
+}
+
+
+#' Why a watched file needs no check: registered in R/config.R or in raw/
+#' @return A description, or NA when the file still has to be checked.
+#' @keywords internal
+.target_done <- function(target, edition) {
+  ed <- as.character(edition)
+  reg <- switch(target, crosswalk = MAEXITS_XWALK_FILES, landscape = MAEXITS_LANDSCAPE_FILES, NULL)
+  if (!is.null(reg)) {
+    return(if (ed %in% names(reg)) sprintf("registered in R/config.R (%s)", basename(reg[[ed]]))
+           else NA_character_)
+  }
+  raw <- tryCatch(here("raw"), error = function(e) NA_character_)
+  if (is.na(raw) || !dir.exists(raw)) return(NA_character_)
+  if (target == "ratebook") {
+    f <- sprintf("countyrate%s.csv", ed)
+    return(if (file.exists(file.path(raw, "ratebook", f))) sprintf("%s is in raw/ratebook/", f)
+           else NA_character_)
+  }
+  folder <- if (target == "cpsc_dec") "december enrollment" else "january enrollment"
+  f <- sprintf("CPSC_Enrollment_Info_%s.csv", sub("-", "_", ed))
+  hit <- list.files(file.path(raw, folder), pattern = paste0("^", sub(".", "\\.", f, fixed = TRUE), "$"),
+                    recursive = TRUE)
+  if (length(hit)) sprintf("%s is in raw/%s/", f, folder) else NA_character_
 }
 
 
@@ -595,6 +626,10 @@
 
 
 .check_target <- function(t) {
+  if (!is.null(t$done) && !is.na(t$done)) {
+    return(as.data.table(c(list(target = t$target, edition = as.character(t$edition), label = t$label),
+                           .result("done", t$done))))
+  }
   r <- tryCatch(switch(t$target,
     crosswalk = .check_crosswalk_release(t$edition),
     landscape = .check_landscape_release(t$edition),
@@ -611,7 +646,7 @@
   res <- rbindlist(lapply(seq_len(nrow(tg)), function(i) .check_target(tg[i])), fill = TRUE)
   res <- merge(res, tg[, .(target, edition = as.character(edition), next_step, overdue_date = overdue)],
                by = c("target", "edition"), sort = FALSE)
-  res[, overdue := !status %in% "released" & Sys.Date() > overdue_date]
+  res[, overdue := !status %in% c("released", "done") & Sys.Date() > overdue_date]
   res[, overdue_date := NULL]
   res[, checked_at := Sys.time()]
   res[, new := FALSE]
@@ -632,15 +667,19 @@
 #' Checks the CMS and NBER pages for the files the next pipeline cycle needs
 #' and reports, for each, whether it is out. By default these follow from
 #' R/config.R:
-#' * `crosswalk`: the Part C&D Plan Crosswalk for the first year not in
-#'   `MAEXITS_XWALK_FILES` (usually posted early October, but the 2026 one
-#'   came on 4 November 2025);
-#' * `landscape`: the MA landscape for the first year not in
-#'   `MAEXITS_LANDSCAPE_FILES` (late September);
+#' * `crosswalk`: the Part C&D Plan Crosswalk for the next transition
+#'   year N, the first year not in `MAEXITS_XWALK_YEARS` (usually posted
+#'   early October, but the 2026 one came on 4 November 2025);
+#' * `landscape`: the CY N MA landscape (late September);
 #' * `cpsc_dec`, `cpsc_jan`: the December and January CPSC enrollment
 #'   files for the next transition (mid-December; mid-January to
 #'   mid-February);
 #' * `ratebook`: the NBER `countyrate` file for the next `dec_year`.
+#'
+#' A file already registered in R/config.R (crosswalk, landscape) or
+#' already in `raw/` (CPSC, ratebook) is reported as `done` without a check.
+#' The targets move on to the following year once N is added to
+#' `MAEXITS_XWALK_YEARS`.
 #'
 #' The check reads the Plan Crosswalks and CPSC RSS feeds, the landscape
 #' page and NBER's ratebook folder, and sends HEAD requests to file links.
@@ -650,7 +689,7 @@
 #' `anomaly` (a file is there but not as expected), `not_yet`, `unknown`
 #' (CMS/NBER could not be reached) and `broken` (a page loaded but did not
 #' show last year's file either, so the page has probably changed and the
-#' check needs updating).
+#' check needs updating), and `done` (registered or already in `raw/`).
 #'
 #' With `remember = TRUE` the results are stored in the folder of
 #' [release_check_status()], so each finding is reported (and notified) only
@@ -1205,7 +1244,7 @@ unschedule_release_check <- function(forget = FALSE) {
   on.exit(unlink(lock, recursive = TRUE), add = TRUE)
 
   released <- if (is.null(st$results)) character() else
-    st$results[status == "released", paste(target, edition)]
+    st$results[status %in% c("released", "done"), paste(target, edition)]
   todo <- st$targets[!paste(target, edition) %in% released]
   if (nrow(todo)) {
     wait <- getOption("maexits.retry_wait", 90)
@@ -1225,7 +1264,7 @@ unschedule_release_check <- function(forget = FALSE) {
   }
 
   st <- .watch_read(dir)
-  released <- st$results[status == "released", paste(target, edition)]
+  released <- st$results[status %in% c("released", "done"), paste(target, edition)]
   missing <- st$targets[!paste(target, edition) %in% released]
   expired <- Sys.Date() > as.Date(st$until)
   if (!nrow(missing) || expired) {

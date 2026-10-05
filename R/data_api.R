@@ -40,6 +40,11 @@
     keys = c("dec_year", "contract_id", "plan_id", "plan_key", "segment_id",
              "county_name", "state_name", "fips"),
     title = "December plan x county: outcome in January, lost coverage, plan details"),
+  exits = list(
+    file = "exits.rds", year_col = "dec_year", plans = TRUE, months = FALSE,
+    keys = c("dec_year", "contract_id", "plan_id", "plan_key", "segment_id",
+             "county_name", "state_name", "fips"),
+    title = "December plan x county: terminated or service-area reduction, December and September enrollment"),
   plan_details = list(
     file = "plan_details.rds", year_col = "year", plans = TRUE, months = FALSE, geo = FALSE,
     keys = c("year", "contract_id", "plan_id", "plan_key", "segment_id"),
@@ -79,6 +84,10 @@
 #'   (`outcome`, `lost_coverage`), how far the exit reached, the county's
 #'   plans next January, and the plan's details. Built for counting who
 #'   lost their plan; each plan-county appears once.
+#' * `"exits"` ([exits]): one row per December plan x county, with whether
+#'   CMS terminated the plan or cut the county from its service area the
+#'   next January, and its December and September enrollment. September
+#'   covers the newest transition before its December file is out.
 #' * `"plan_details"` ([plan_details]): plan x segment x contract year:
 #'   organization and parent, premiums, deductible, out-of-pocket maximum,
 #'   star ratings, SNP details.
@@ -98,11 +107,11 @@
 #' [plan_county]).
 #'
 #' @param dataset One of `"county_panel"`, `"plan_county"`, `"displacement"`,
-#'   `"plan_details"`, `"landscape"`, `"enrollment"`.
+#'   `"exits"`, `"plan_details"`, `"landscape"`, `"enrollment"`.
 #' @param plans Plans to keep: `"H1234-001"` for one plan, `"H1234"` for
 #'   every plan in a contract. Not available for the county panel.
 #' @param years Years to keep: `dec_year` for `county_panel`,
-#'   `plan_county` and `displacement`, contract year for `plan_details` and
+#'   `plan_county`, `displacement` and `exits`, contract year for `plan_details` and
 #'   `landscape`, calendar year for `enrollment`.
 #' @param months `enrollment` only: months as `"YYYY-MM"` strings or Dates.
 #' @param states State names or postal abbreviations (`"MD"`, `"Maryland"`).
@@ -131,7 +140,7 @@
 #' maexits_data("enrollment", months = "2025-12", counties = 24005)
 #' }
 #' @export
-maexits_data <- function(dataset = c("county_panel", "plan_county", "displacement",
+maexits_data <- function(dataset = c("county_panel", "plan_county", "displacement", "exits",
                                      "plan_details", "landscape", "enrollment"),
                          plans = NULL, years = NULL, months = NULL, states = NULL,
                          counties = NULL, variables = NULL,

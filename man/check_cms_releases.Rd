@@ -33,11 +33,10 @@ Checks the CMS and NBER pages for the files the next pipeline cycle needs
 and reports, for each, whether it is out. By default these follow from
 R/config.R:
 \itemize{
-\item \code{crosswalk}: the Part C&D Plan Crosswalk for the first year not in
-\code{MAEXITS_XWALK_FILES} (usually posted early October, but the 2026 one
-came on 4 November 2025);
-\item \code{landscape}: the MA landscape for the first year not in
-\code{MAEXITS_LANDSCAPE_FILES} (late September);
+\item \code{crosswalk}: the Part C&D Plan Crosswalk for the next transition
+year N, the first year not in \code{MAEXITS_XWALK_YEARS} (usually posted
+early October, but the 2026 one came on 4 November 2025);
+\item \code{landscape}: the CY N MA landscape (late September);
 \item \code{cpsc_dec}, \code{cpsc_jan}: the December and January CPSC enrollment
 files for the next transition (mid-December; mid-January to
 mid-February);
@@ -45,6 +44,11 @@ mid-February);
 }
 }
 \details{
+A file already registered in R/config.R (crosswalk, landscape) or
+already in \verb{raw/} (CPSC, ratebook) is reported as \code{done} without a check.
+The targets move on to the following year once N is added to
+\code{MAEXITS_XWALK_YEARS}.
+
 The check reads the Plan Crosswalks and CPSC RSS feeds, the landscape
 page and NBER's ratebook folder, and sends HEAD requests to file links.
 It never downloads a data file. Statuses: \code{released} (listed,
@@ -53,7 +57,7 @@ up but not listed yet), \code{listed} (listed, file not confirmed yet),
 \code{anomaly} (a file is there but not as expected), \code{not_yet}, \code{unknown}
 (CMS/NBER could not be reached) and \code{broken} (a page loaded but did not
 show last year's file either, so the page has probably changed and the
-check needs updating).
+check needs updating), and \code{done} (registered or already in \verb{raw/}).
 
 With \code{remember = TRUE} the results are stored in the folder of
 \code{\link[=release_check_status]{release_check_status()}}, so each finding is reported (and notified) only

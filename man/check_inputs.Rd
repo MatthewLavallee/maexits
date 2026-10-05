@@ -4,10 +4,16 @@
 \alias{check_inputs}
 \title{Check that every input for the requested crosswalk years is present}
 \usage{
-check_inputs(xwalk_years = MAEXITS_XWALK_YEARS)
+check_inputs(
+  xwalk_years = MAEXITS_XWALK_YEARS,
+  exits_years = MAEXITS_EXITS_YEARS
+)
 }
 \arguments{
 \item{xwalk_years}{Integer vector of crosswalk years to check.}
+
+\item{exits_years}{Crosswalk years of the exits table (default
+\code{MAEXITS_EXITS_YEARS}).}
 }
 \value{
 Invisibly TRUE; stops with the list of problems otherwise.
@@ -16,7 +22,10 @@ Invisibly TRUE; stops with the list of problems otherwise.
 Run this before \code{run_data_pipeline()} (which also calls it). It
 lists everything missing at once: unregistered or absent crosswalk
 files, every landscape year the build reads, missing or duplicated
-December/January CPSC files, missing NBER ratebook years, and the FIPS
-and penetration reference files. It also notes inputs already staged for
-a later crosswalk year that is not yet in \code{MAEXITS_XWALK_YEARS}.
+December/January CPSC files, missing NBER ratebook years, the FIPS
+and penetration reference files, and, for the exits table, the September
+CPSC file of every year in \code{exits_years} with the crosswalk and
+landscape of any of those years past \code{xwalk_years}. It also notes
+inputs already staged for a later crosswalk year that is not yet in
+\code{MAEXITS_XWALK_YEARS}.
 }

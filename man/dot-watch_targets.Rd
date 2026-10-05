@@ -8,7 +8,8 @@
 }
 \value{
 data.table with target, edition (year or "YYYY-MM"), label,
-overdue (date after which a missing file is flagged) and next_step.
+overdue (date after which a missing file is flagged), next_step and
+done (why the file needs no check, or NA).
 }
 \description{
 Files the next cycle needs, from R/config.R

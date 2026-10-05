@@ -239,6 +239,29 @@
     v("displacement", "snp_type", "SNP type: Dual-Eligible, Chronic or Disabling Condition, or Institutional."),
     details("displacement"),
 
+    # --- exits -------------------------------------------------------------
+    v("exits", "dec_year", "December year of the transition (2026 = December 2026 to January 2027)."),
+    plan("exits"),
+    v("exits", "segment_id", "Plan segment in the county (the lowest, if the plan has several there)."),
+    geo("exits"),
+    v("exits", "plan_type", "Plan type (landscape)."),
+    v("exits", "snp", "Special needs plan: Yes or No."),
+    v("exits", "snp_type", "SNP type: Dual-Eligible, Chronic or Disabling Condition, or Institutional; NA for other plans."),
+    v("exits", "exit_type", paste(
+      "What CMS's crosswalk does to the plan in this county for the next January:",
+      "terminated (every crosswalk link of the plan-county is a termination),",
+      "service_area_reduction (the plan renews with a service-area reduction and neither it",
+      "nor any other plan it maps to serves the county), or none. none includes plan-counties",
+      "moved to a plan that does not serve the county or renewed without listing in the county,",
+      "which displacement counts as having lost coverage.")),
+    v("exits", "xwalk_statuses", "The CMS crosswalk statuses of the plan-county's links, joined with \" + \"."),
+    v("exits", "dec_enrollment", "December enrollment of the plan in the county: reported count, 10 per CMS-suppressed cell, 0 with no CMS record. NA for the newest dec_year until December enrollment is out. Each plan-county appears once, so sums count everyone once."),
+    v("exits", "dec_enrollment_low", "As dec_enrollment with suppressed cells as 1 (lower bound)."),
+    v("exits", "dec_src", "Source of dec_enrollment: reported, suppressed, mixed, or no_record."),
+    v("exits", "sep_enrollment", "September enrollment of the plan in the county (same rules as dec_enrollment), every dec_year. Use it to compare the newest transition with earlier ones before its December enrollment is out."),
+    v("exits", "sep_enrollment_low", "As sep_enrollment with suppressed cells as 1 (lower bound)."),
+    v("exits", "sep_src", "Source of sep_enrollment: reported, suppressed, mixed, or no_record."),
+
     # --- plan_details ----------------------------------------------------
     v("plan_details", "year", "Contract (plan) year."),
     plan("plan_details"),

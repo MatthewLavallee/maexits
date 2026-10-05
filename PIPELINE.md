@@ -16,6 +16,7 @@ maexitsv2/
 │   ├── data_augment.R          # FIPS, penetration, benchmark, augment_analytic(), make_county_panel(), run_data_pipeline()
 │   ├── plan_details.R          # make_plan_details(): premiums, MOOP, stars, SNP details by plan and year
 │   ├── displacement.R          # make_displacement(): one row per December plan x county, with its January outcome
+│   ├── exits.R                 # make_exits(): December plan x county, CMS's terminations and SARs, December and September enrollment
 │   ├── preliminary.R           # run_preliminary() / backtest_preliminary(): estimate before Dec/Jan CPSC
 │   ├── release_watch.R         # check_cms_releases(), schedule_release_check(): know when next cycle's files are out
 │   ├── data_api.R              # maexits_data(), cms_enrollment(): load and filter data
@@ -27,12 +28,12 @@ maexitsv2/
 ├── tests/testthat/             # failure-mode tests + opt-in full-rebuild regression test
 ├── provenance/                 # md5 manifest of raw/ and the derived tables (data release data-2018-2025)
 ├── man/                         # roxygen2-generated .Rd documentation; man/figures holds the README figure
-├── tools/readme-figure.R        # draws the README figure from the displacement table
+├── tools/readme-figure.R        # draws the README figure from the exits table
 ├── trunk/
 │   └── derived/
 │       └── county_panel.csv    # analysis-ready county × year panel (committed uncompressed, ~6 MB)
 │                               # other derived/*.csv are gitignored — restore from the data release's derived_data.zip
-└── raw/                        # GITIGNORED (~4.3 GB public CMS/NBER inputs) — see Data Sources
+└── raw/                        # GITIGNORED (~6 GB public CMS/NBER inputs) — see Data Sources
 ```
 
 Note: `raw/` and most of `trunk/derived/` are gitignored (see `.gitignore`); only `trunk/derived/county_panel.csv` is tracked uncompressed.
@@ -50,7 +51,7 @@ unzip derived_data.zip
 
 (Or download `derived_data.zip` from the release page on GitHub.)
 
-This restores the full set of derived tables to `trunk/derived/` (`december_enrollment.csv`, `january_enrollment.csv`, `landscape.csv`, `analytictable.csv`, `analytictable_augmented.csv`, `county_panel.csv`, `plan_details.csv`, `displacement.csv`) and lets you skip the ~4.3 GB raw rebuild entirely.
+This restores the full set of derived tables to `trunk/derived/` (`december_enrollment.csv`, `january_enrollment.csv`, `landscape.csv`, `analytictable.csv`, `analytictable_augmented.csv`, `county_panel.csv`, `plan_details.csv`, `displacement.csv`, `exits.csv`) and lets you skip the ~6 GB raw rebuild entirely.
 
 **(b) County panel only.** `trunk/derived/county_panel.csv` (the analysis-ready county × year panel, ~6 MB) is committed uncompressed and is available immediately after cloning — no unzip required. This is sufficient for all geographic-analysis functions.
 
@@ -58,7 +59,7 @@ This restores the full set of derived tables to `trunk/derived/` (`december_enro
 
 ## Data Sources
 
-All raw inputs are PUBLIC files from CMS and NBER. The `raw/` directory (~4.3 GB) is gitignored; download the files below and recreate the folder layout shown in the next section. (To skip the rebuild entirely, download `derived_data.zip` from the data release and unzip it at the repo root to restore `trunk/derived/*.csv`; the analysis-ready `trunk/derived/county_panel.csv` is also committed uncompressed.)
+All raw inputs are PUBLIC files from CMS and NBER. The `raw/` directory (~6 GB) is gitignored; download the files below and recreate the folder layout shown in the next section. (To skip the rebuild entirely, download `derived_data.zip` from the data release and unzip it at the repo root to restore `trunk/derived/*.csv`; the analysis-ready `trunk/derived/county_panel.csv` is also committed uncompressed.)
 
 | Dataset | Used for | Source (page title) | URL | Repo folder |
 |---|---|---|---|---|
@@ -80,7 +81,8 @@ The pipeline reads files by exact folder/filename patterns. The tree below shows
 
 - Enrollment: for each crosswalk year N in `MAEXITS_XWALK_YEARS` (`R/config.R`, currently 2019-2026) the build needs **December enrollment for N-1** and **January enrollment for N**, i.e. December 2018-2025 and January 2019-2026. The SSA↔FIPS lookup used by `add_fips()` and `add_benchmark()` is `MAEXITS_FIPS_LOOKUP_FILE` (`raw/january enrollment/CPSC_Enrollment_2025_01/CPSC_Enrollment_Info_2025_01.csv`), so that file must be present.
 - Landscape: `make_landscape()` reads **CY2016 through the last crosswalk year** (CY2026 today; PDP rows dropped).
-- Crosswalk: one registered file per year in `MAEXITS_XWALK_FILES` → crosswalk years **2019-2026**.
+- Crosswalk: one registered file per year in `MAEXITS_XWALK_FILES` → crosswalk years **2019-2026**, plus **2027** for the exits table.
+- Exits table: for each crosswalk year N in `MAEXITS_EXITS_YEARS` (currently 2019-2027) it needs **September N-1 CPSC** in `raw/monthly enrollment/`, and for N past `MAEXITS_XWALK_YEARS` the N crosswalk and CY N landscape (today the 2027 crosswalk and CY2027 landscape).
 - Ratebook: `add_benchmark()` reads `countyrate<Y>.csv` for every `dec_year` Y in the table → **2018-2025** today; a missing year stops the build.
 - Penetration: single file, **2018-12** only.
 
@@ -122,7 +124,8 @@ raw/
 │   │       ├── CY2024_Landscape_SNP_sanctioned_20240628.csv
 │   │       └── CY2024_Plan_Premium_Report_sanctioned_20240628.csv   (+ CY2024_Plan_Premium_Report_20240723.csv one level up)
 │   ├── CY2025/CY2025_Landscape_202506.1.csv     (single combined CSV)
-│   └── CY2026/CY2026_Landscape_202509.csv        (single combined CSV)
+│   ├── CY2026/CY2026_Landscape_202509.csv        (single combined CSV)
+│   └── CY2027/CY2027_Landscape_202609.csv        (single combined CSV; the exits table and run_preliminary() until dec_year 2026 is built)
 │
 ├── plan crosswalk/
 │   ├── PlanCrosswalk2019_10012018.txt
@@ -132,33 +135,42 @@ raw/
 │   ├── PlanCrosswalk2023_10032022.txt
 │   ├── PlanCrosswalk2024_09282023.txt   <-- the 2024 crosswalk
 │   ├── PlanCrosswalk2024_10012024.txt   <-- the 2025 crosswalk (CMS named it "2024"; resolver picks 10012024)
-│   └── PlanCrosswalk2026_10012025.txt   <-- the 2026 crosswalk
+│   ├── PlanCrosswalk2026_10012025.txt   <-- the 2026 crosswalk
+│   └── PlanCrosswalk2027_10012026.txt   <-- the 2027 crosswalk (the exits table and run_preliminary() until dec_year 2026 is built)
 │        (.txt is read; .xlsx and *_readme.pdf may sit alongside but are not read)
 │
 ├── penetration/
 │   └── State_County_Penetration_MA_2018_12/
 │       └── State_County_Penetration_MA_2018_12.csv
 │
-└── ratebook/
-    ├── countyrate2018.csv
-    ├── countyrate2019.csv
-    ├── countyrate2020.csv
-    ├── countyrate2021.csv
-    ├── countyrate2022.csv
-    ├── countyrate2023.csv
-    ├── countyrate2024.csv   (CMS reformatted this year: reader uses skip=3 and a "0% Bonus" column)
-    └── countyrate2025.csv
+├── ratebook/
+│   ├── countyrate2018.csv
+│   ├── countyrate2019.csv
+│   ├── countyrate2020.csv
+│   ├── countyrate2021.csv
+│   ├── countyrate2022.csv
+│   ├── countyrate2023.csv
+│   ├── countyrate2024.csv   (CMS reformatted this year: reader uses skip=3 and a "0% Bonus" column)
+│   ├── countyrate2025.csv
+│   └── countyrate2026.csv   (read once dec_year 2026 is built; run_preliminary() fills the benchmark with it)
+│
+└── monthly enrollment/          (September of each dec_year, for the exits table and run_preliminary())
+    ├── CPSC_Enrollment_2018_09/CPSC_Enrollment_Info_2018_09.csv
+    │     … one folder per year …
+    └── CPSC_Enrollment_2026_09/CPSC_Enrollment_Info_2026_09.csv
+         (September 2018-2019 come from downloads.cms.gov/files/ (CPSC_Enrollment_2018_09.zip,
+          cpsc_enrollment_2019_09.zip); 2020 on from cms.gov/files/zip/monthly-enrollment-cpsc-september-YYYY.zip)
 ```
 
 Filename specifics enforced by the code (set in `R/config.R`):
-- **Years covered:** `MAEXITS_XWALK_YEARS` (currently `2019:2026`). Coverage is never inferred from what is on disk.
+- **Years covered:** `MAEXITS_XWALK_YEARS` (currently `2019:2026`), and `MAEXITS_EXITS_YEARS` (currently `2019:2027`) for the exits table's September columns. Coverage is never inferred from what is on disk.
 - **Enrollment:** files are found recursively under each month folder and must be named `CPSC_Enrollment_Info_YYYY_MM.csv`. The month must match the folder (`12` in `december enrollment`, `01` in `january enrollment`), each year may appear only once, and all files must share one header. Anything else stops the build. The FIPS and SSA lookups use `MAEXITS_FIPS_LOOKUP_FILE` (the January 2025 file).
 - **Crosswalks:** each year's exact file is registered in `MAEXITS_XWALK_FILES`. The 2025 crosswalk is registered as `PlanCrosswalk2024_10012024.txt`, which is how CMS named it. The status vocabulary is checked against `MAEXITS_XWALK_STATUS_CLASS`.
-- **Landscape:** CY2016-CY2023 are read by globbing `*.csv` under each `CYxxxx/` folder, grepping filenames for `MA` vs `SNP`, and checking each file's columns. CY2024 uses its four fixed files. CY2025 and later use the file registered in `MAEXITS_LANDSCAPE_FILES`. CY2026 is pinned to the `202509` vintage behind the committed tables.
+- **Landscape:** CY2016-CY2023 are read by globbing `*.csv` under each `CYxxxx/` folder, grepping filenames for `MA` vs `SNP`, and checking each file's columns. CY2024 uses its four fixed files. CY2025 and later use the file registered in `MAEXITS_LANDSCAPE_FILES`. CY2026 is pinned to the `202509` vintage behind the committed tables; CY2027 is CMS's first CY2027 posting (`cy2027-landscape-202609-1.zip`).
 - The `raw/landscape/2006-2024` and `CY2013`-`CY2015` folders on disk are not read by the current pipeline (it starts at CY2016) and are not required.
 - `provenance/raw_manifest_data-2018-2025.csv` records the size and md5 of every raw file behind the committed derived tables (data release `data-2018-2025`).
 
-Repo distribution reminder: `raw/` is gitignored. To run from raw inputs, recreate the tree above and call `run_data_pipeline()`. To skip the ~4.3 GB rebuild, download `derived_data.zip` from the data release and unzip it at the repo root to restore `trunk/derived/*.csv`; `trunk/derived/county_panel.csv` is also committed uncompressed.
+Repo distribution reminder: `raw/` is gitignored. To run from raw inputs, recreate the tree above and call `run_data_pipeline()`. To skip the ~6 GB rebuild, download `derived_data.zip` from the data release and unzip it at the repo root to restore `trunk/derived/*.csv`; `trunk/derived/county_panel.csv` is also committed uncompressed.
 
 ## Reproducing the pipeline
 
@@ -178,7 +190,7 @@ devtools::load_all(".")
 
 # Check that every input exists, then run the full build: enrollment ->
 # landscape -> analytic table -> FIPS/penetration -> benchmark -> augment
-# -> county panel -> plan details -> displacement.
+# -> county panel -> plan details -> displacement -> exits.
 check_inputs()
 panel <- run_data_pipeline(save = TRUE, verbose = TRUE)
 
@@ -186,7 +198,7 @@ panel <- run_data_pipeline(save = TRUE, verbose = TRUE)
 # run_data_pipeline(out_dir = "/tmp/maexits_trial")
 ```
 
-`run_data_pipeline()` checks its inputs first, passes in-memory tables between steps, and runs the validation checks in `R/validate.R` along the way. It writes nothing until the whole run has succeeded. Then it writes all eight tables to `out_dir` (default `trunk/derived/`) together, so a failed run never leaves a mix of old and new files. A full build takes about 6 minutes and produces no warnings.
+`run_data_pipeline()` checks its inputs first, passes in-memory tables between steps, and runs the validation checks in `R/validate.R` along the way. It writes nothing until the whole run has succeeded. Then it writes all nine tables to `out_dir` (default `trunk/derived/`) together, so a failed run never leaves a mix of old and new files. A full build takes about 10 minutes and produces no warnings.
 
 Individual steps can also be run on their own. Each function reads its inputs from `trunk/derived/` when its argument is `NULL`. Pass the landscape and the benchmarked table along explicitly, because `add_benchmark()` does not write a file:
 
@@ -201,6 +213,7 @@ at  <- augment_analytic(at, landscape = ls)           # analytictable_augmented.
 panel <- make_county_panel(at)                        # county_panel.csv (county x dec_year)
 details <- make_plan_details()                        # plan_details.csv (plan x segment x contract year)
 ds  <- make_displacement(at, landscape = ls, plan_details = details, panel = panel)  # displacement.csv
+ex  <- make_exits(at)                                 # exits.csv (builds the September tables from raw/)
 ```
 
 ## Annual update (each new cycle)
@@ -212,7 +225,8 @@ Crosswalk year N covers the December N-1 → January N transition. The next cycl
 | Any time (NBER posts it in April of N-2) | NBER `countyrate<N-1>.csv` | `raw/ratebook/` | Check its header has `ssa_code`/`parts_0_bonus` (or CMS's `0% ... Bonus` layout) and that code `01000` is present |
 | ~Sep 24 – Oct 1 | CY N landscape (`CY<N>_Landscape_<yyyymm>.csv`) | `raw/landscape/CY<N>/` | Register the exact path in `MAEXITS_LANDSCAPE_FILES`. Use the initial release and record its readme date and md5; don't swap in later reissues. The file's `Contract Year` must equal N. Renamed or missing required columns fail loudly; added columns are ignored. Add new column names to `.LANDSCAPE_COLUMNS` in `data_build.R`. |
 | ~Oct 1 – 7 (Nov 4 in 2025) | N Part C&D Plan Crosswalk (`PlanCrosswalk<label>_<MMDDYYYY>.txt`) | `raw/plan crosswalk/` (never rename CMS files) | Register the exact filename in `MAEXITS_XWALK_FILES`. The label may not equal N; CMS named the 2025 file "2024". Read the readme's status table: new statuses stop the build until added to `MAEXITS_XWALK_STATUS_CLASS` and the role rules. |
-| Oct – Nov | A pre-exit CPSC month, e.g. September N-1 | `raw/monthly enrollment/` (**never** the december/january folders) | Run the preliminary estimate (below) |
+| ~Sep 10–21 | September N-1 CPSC | `raw/monthly enrollment/CPSC_Enrollment_<N-1>_09/` (**never** the december/january folders) | Needed by the exits table once the N crosswalk is registered; also the usual proxy for the preliminary estimate (below) |
+| After the crosswalk and landscape | — | — | Add N to `MAEXITS_EXITS_YEARS` and rerun `run_data_pipeline()`: the exits table gains `dec_year` N-1 on September enrollment (its December columns stay NA until January). Publish it with the other tables (see "After the January run"). |
 | ~Dec 11–14 | December N-1 CPSC | `raw/december enrollment/CPSC_Enrollment_<N-1>_12/` | Extract it exactly once. It is not read until N is in `MAEXITS_XWALK_YEARS`. Optionally rerun the preliminary estimate with this file as the proxy, for a December-based exit estimate before January arrives. |
 | ~Jan 8 – Feb 13 | January N CPSC | `raw/january enrollment/CPSC_Enrollment_<N>_01/` | Add N to `MAEXITS_XWALK_YEARS`, run `check_inputs()`, then do a trial `run_data_pipeline(out_dir = ...)`. Compare its `dec_year` ≤ N-2 rows with the committed tables (the regression test does this for 2018–2025), then run into `trunk/derived/`. |
 | After the January run | — | — | Build the release files with `prepare_data_release()`, zip `trunk/derived/*.csv` as `derived_data.zip`, and publish both as a new data release; point `MAEXITS_DATA_RELEASE` at it. Record the new inputs and outputs in `provenance/` (raw manifest rows and a `derived_md5_<release>.txt`). Commit. |
@@ -222,15 +236,15 @@ Crosswalk year N covers the December N-1 → January N transition. The next cycl
 
 ### Knowing when the files are out
 
-`check_cms_releases()` checks whether each file the next cycle needs is out: the crosswalk and landscape for the first year not yet registered in `R/config.R`, the December and January CPSC files, and the NBER ratebook. It reads the CMS Plan Crosswalks and CPSC RSS feeds, the landscape page and NBER's ratebook folder, and sends HEAD requests to the file links. It never downloads anything, and it never follows redirects, because CMS redirects some usual file addresses to different files.
+`check_cms_releases()` checks whether each file the next transition needs is out: for crosswalk year N (the first year not in `MAEXITS_XWALK_YEARS`), the N crosswalk and landscape, the December N-1 and January N CPSC files, and the NBER ratebook. It reads the CMS Plan Crosswalks and CPSC RSS feeds, the landscape page and NBER's ratebook folder, and sends HEAD requests to the file links. It never downloads anything, and it never follows redirects, because CMS redirects some usual file addresses to different files.
 
 ```r
 check_cms_releases()                       # a few seconds
-#>   2027 Part C&D Plan Crosswalk      not yet   not listed yet (the list ends at 2026)
-#>   CY2027 MA landscape               not yet   not listed yet (the page lists CY2026 Landscape (202609) (ZIP))
+#>   2027 Part C&D Plan Crosswalk      done      registered in R/config.R (PlanCrosswalk2027_10012026.txt)
+#>   CY2027 MA landscape               done      registered in R/config.R (CY2027_Landscape_202609.csv)
 #>   December 2026 CPSC enrollment     not yet   not out yet (latest CPSC month: 2026-09)
 #>   January 2027 CPSC enrollment      not yet   not out yet (latest CPSC month: 2026-09)
-#>   NBER ratebook countyrate2026.csv  released  countyrate2026.csv is on NBER
+#>   NBER ratebook countyrate2026.csv  done      countyrate2026.csv is in raw/ratebook/
 
 schedule_release_check()                   # check daily at 17:45 until every file is out
 schedule_release_check(targets = "crosswalk")
@@ -238,7 +252,7 @@ release_check_status()                     # what it has found; acknowledge = TR
 unschedule_release_check()
 ```
 
-Statuses: `released` (listed and downloadable), `hint` (a file is up at the usual address but not listed), `listed` (listed, file not downloadable yet), `anomaly` (a file is there but its name, type or size is unexpected), `not_yet`, `unknown` (CMS or NBER could not be reached) and `broken`. `broken` means a page loaded but did not show last year's file either, so the page has probably changed and the checker needs updating.
+Statuses: `released` (listed and downloadable), `hint` (a file is up at the usual address but not listed), `listed` (listed, file not downloadable yet), `anomaly` (a file is there but its name, type or size is unexpected), `not_yet`, `unknown` (CMS or NBER could not be reached), `broken`, and `done` (already registered in `R/config.R` or already in `raw/`, so not checked). The check covers one transition at a time and moves on to the next year's files once that year is added to `MAEXITS_XWALK_YEARS`. `broken` means a page loaded but did not show last year's file either, so the page has probably changed and the checker needs updating.
 
 On macOS, `schedule_release_check()` installs a launchd job in `~/Library/LaunchAgents`, so nothing needs to stay open. The job runs every day at the chosen time and at login, which catches up days the Mac was off. It runs the **installed** package, so install it first (`remotes::install_github("MatthewLavallee/maexits")` or `devtools::install()`). Each finding raises one desktop notification and stays in `release_check_status()` and the package startup message until you acknowledge it. A file later than in any past year and a checker that cannot reach CMS for three runs are flagged the same way. The job removes itself once every file is out, or on 31 March. Notifications come from "Script Editor"; if none appear, allow them in System Settings > Notifications. On other systems the function prints a cron or Task Scheduler line to add.
 
@@ -262,7 +276,7 @@ Score a proxy month against a completed year before quoting it with `backtest_pr
 
 ```r
 testthat::test_dir("tests/testthat")                      # failure-mode tests (seconds)
-Sys.setenv(MAEXITS_FULL_REBUILD = "true")                  # + full rebuild from raw/ (~5 min),
+Sys.setenv(MAEXITS_FULL_REBUILD = "true")                  # + full rebuild from raw/ (~11 min),
 testthat::test_dir("tests/testthat")                      #   checked against provenance/derived_md5_data-2018-2025.txt
 ```
 
@@ -279,6 +293,7 @@ testthat::test_dir("tests/testthat")                      #   checked against pr
 | `analytictable_augmented.csv` | crosswalk link × county × `dec_year` | Adds `benchmark`, the exit flags (`sar_dropped`, `forced`, `forced_county`, `forced_reason`), `role`, and the counting columns (`prev_links`, `dec_enrollment_once`, `dec_enrollment_split`, ...) |
 | `plan_details.csv` | contract year × plan × segment | Plan characteristics from the landscape files, the Part D Plan and Premium reports and CPSC Contract Info (`make_plan_details()`) |
 | `displacement.csv` | December plan × county | One row per December plan-county: outcome in January, lost coverage, scope flags, alternatives, plan details (`make_displacement()`) |
+| `exits.csv` | December plan × county | One row per December plan-county: whether CMS terminated the plan or cut the county (SAR) the next January, with December and September enrollment; September runs through the newest registered crosswalk (`make_exits()`) |
 | `county_panel.csv` | county × `dec_year` | Analysis-ready panel: exit rate, displaced enrollment, enrollment change, incumbent and new-entrant enrollment, exit group, `pen_quartile`, each summed over links and counted once per plan-county (`_once`) (committed uncompressed) |
 
 Field-level definitions, status categories, and derived-variable formulas are documented in [`DATA_DICTIONARY.md`](DATA_DICTIONARY.md). Per-function reference documentation is in `man/` (roxygen2-generated `.Rd` files).

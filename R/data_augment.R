@@ -616,7 +616,7 @@ make_county_panel <- function(at = NULL, save = TRUE) {
 #' Runs all data construction steps in order, passing in-memory
 #' data.tables between steps. Inputs are checked first
 #' (\code{check_inputs()}), every step runs its validation checks, and
-#' nothing is written until the whole run has succeeded; the eight derived
+#' nothing is written until the whole run has succeeded; the nine derived
 #' tables are then written to a staging folder and moved into
 #' \code{out_dir} together, so a failed run never leaves a mix of old and
 #' new files.
@@ -628,13 +628,16 @@ make_county_panel <- function(at = NULL, save = TRUE) {
 #'   \code{MAEXITS_XWALK_YEARS} from R/config.R).
 #' @param out_dir Folder for the derived tables (default
 #'   \code{trunk/derived}). Point it elsewhere for a trial run.
+#' @param exits_years Crosswalk years of the exits table (default
+#'   \code{MAEXITS_EXITS_YEARS}); must include \code{xwalk_years}.
 #' @return Invisibly returns the final county-year panel data.table.
 #' @export
 run_data_pipeline <- function(save = TRUE, verbose = TRUE,
                               xwalk_years = MAEXITS_XWALK_YEARS,
-                              out_dir = here("trunk", "derived")) {
+                              out_dir = here("trunk", "derived"),
+                              exits_years = MAEXITS_EXITS_YEARS) {
   message("=== Step 0: Checking inputs ===")
-  check_inputs(xwalk_years)
+  check_inputs(xwalk_years, exits_years)
 
   message("\n=== Step 1: Processing enrollment files ===")
   last <- max(as.integer(xwalk_years))
@@ -668,6 +671,9 @@ run_data_pipeline <- function(save = TRUE, verbose = TRUE,
   displacement <- make_displacement(at_aug, landscape = landscape, plan_details = details,
                                     panel = panel, save = FALSE)
 
+  message("\n=== Step 10: Building exits table ===")
+  exits <- make_exits(at_aug, proxy_at = .proxy_augmented(exits_years), save = FALSE)
+
   if (save) {
     # analytictable.csv holds the table after FIPS and penetration (no
     # benchmark), as in the step-by-step path.
@@ -679,7 +685,8 @@ run_data_pipeline <- function(save = TRUE, verbose = TRUE,
       analytictable_augmented = at_aug,
       county_panel = panel,
       plan_details = details,
-      displacement = displacement
+      displacement = displacement,
+      exits = exits
     ), out_dir)
   }
 

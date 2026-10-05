@@ -8,7 +8,9 @@
 #   2. When the N crosswalk is released (~Oct 1), register its exact file
 #      in MAEXITS_XWALK_FILES. If it uses a new status wording, add it to
 #      MAEXITS_XWALK_STATUS_CLASS with the matching class.
-#      (run_preliminary() can run from here on.)
+#      (run_preliminary() can run from here on.) With September N-1 CPSC
+#      in raw/monthly enrollment/, add N to MAEXITS_EXITS_YEARS and run
+#      run_data_pipeline(): the exits table gains dec_year N-1.
 #   3. Once the December N-1 and January N CPSC files are in raw/ (~Jan),
 #      add N to MAEXITS_XWALK_YEARS, then run check_inputs() and
 #      run_data_pipeline().
@@ -38,7 +40,8 @@ MAEXITS_XWALK_FILES <- c(
   "2023" = "PlanCrosswalk2023_10032022.txt",
   "2024" = "PlanCrosswalk2024_09282023.txt",
   "2025" = "PlanCrosswalk2024_10012024.txt",  # CMS labelled this file "2024"
-  "2026" = "PlanCrosswalk2026_10012025.txt"
+  "2026" = "PlanCrosswalk2026_10012025.txt",
+  "2027" = "PlanCrosswalk2027_10012026.txt"
 )
 
 # Landscape years are read from this year through the last January year.
@@ -53,16 +56,32 @@ MAEXITS_LANDSCAPE_FILES <- c(
   "2025" = "CY2025/CY2025_Landscape_202506.1.csv",
   # Frozen vintage: the committed dec_year 2025 tables use 202509.
   # Do not replace it with CMS's later 202609 reissue.
-  "2026" = "CY2026/CY2026_Landscape_202509.csv"
+  "2026" = "CY2026/CY2026_Landscape_202509.csv",
+  # CMS's first CY2027 posting, cy2027-landscape-202609-1.zip (readme dated
+  # 2026-09-30, data last updated 2026-09-22).
+  "2027" = "CY2027/CY2027_Landscape_202609.csv"
 )
+
+# Crosswalk years of the exits table (make_exits()). It runs one year ahead
+# of MAEXITS_XWALK_YEARS on September enrollment: add N here once the N
+# crosswalk and landscape are registered and September N-1 CPSC is in
+# raw/monthly enrollment/ (CMS posts it in mid-September, before the
+# crosswalk), so the newest transition can be compared with earlier years
+# months before its December file is out.
+MAEXITS_EXITS_YEARS <- 2019:2027
+
+# Month whose CPSC enrollment stands in for December in the exits table:
+# September N-1 for crosswalk year N.
+MAEXITS_EXITS_MONTH <- 9L
 
 # Plan details (make_plan_details()) are built from this contract year on:
 # the first December the pipeline covers.
 MAEXITS_PLAN_DETAIL_FIRST_YEAR <- 2018L
 
 # Landscape files whose star rating columns are blank for every plan (the
-# CY2026 202509 vintage); make_plan_details() skips their star coverage check.
-MAEXITS_LANDSCAPE_BLANK_STARS <- 2026L
+# CY2026 202509 and CY2027 202609 vintages, posted before CMS's October star
+# ratings); make_plan_details() skips their star coverage check.
+MAEXITS_LANDSCAPE_BLANK_STARS <- c(2026L, 2027L)
 
 # CMS "Plan and Premium Information for Medicare Plans Offering Part D"
 # reports, relative to raw/landscape/: Part C and Part D premiums for MA

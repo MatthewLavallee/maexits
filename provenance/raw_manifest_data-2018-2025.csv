@@ -341,3 +341,25 @@ path,bytes,md5
 "raw/ratebook/countyrate2023.csv",237176,d78e2f99c041740cfabe79c012e15d01
 "raw/ratebook/countyrate2024.csv",237847,459673151af64a036f447cb5f4b650f7
 "raw/ratebook/countyrate2025.csv",237417,64c6ed2ffc5749b41fd2522d1a509539
+"raw/monthly enrollment/CPSC_Enrollment_2018_09/CPSC_Enrollment_Info_2018_09.csv",115745276,64a0e893d74caa1b4d0a31da78b45ed4
+"raw/monthly enrollment/CPSC_Enrollment_2019_09/CPSC_Enrollment_Info_2019_09.csv",136284298,e9e798fa106c6f6641f539e117f2138c
+"raw/monthly enrollment/CPSC_Enrollment_2020_09/CPSC_Enrollment_Info_2020_09.csv",160779913,89287b1c8d4b5b7c91ee3d38e2b477cf
+"raw/monthly enrollment/CPSC_Enrollment_2021_09/CPSC_Enrollment_Info_2021_09.csv",167983053,53c88f35f082c7774891103ac0787691
+"raw/monthly enrollment/CPSC_Enrollment_2022_09/CPSC_Enrollment_Info_2022_09.csv",178210959,6ab2203264519b10e700d6ddd8ae20ed
+"raw/monthly enrollment/CPSC_Enrollment_2023_09/CPSC_Enrollment_Info_2023_09.csv",185668248,f15ce5e2e0e24a8c831e21ba1599f504
+"raw/monthly enrollment/CPSC_Enrollment_2024_09/CPSC_Enrollment_Info_2024_09.csv",185684135,79527046d48662c497fc0df3b7da11fe
+"raw/monthly enrollment/CPSC_Enrollment_2025_09/CPSC_Enrollment_Info_2025_09.csv",184382847,2bdaa317536f248462d026c83e1b202e
+"raw/monthly enrollment/CPSC_Enrollment_2026_09/CPSC_Enrollment_Info_2026_09.csv",170389016,eab798ce0f34f0cdaaf180357cfed546
+"raw/monthly enrollment/CPSC_Enrollment_2018_09.zip",24414753,af45ae9e378e4e80e58e405cca043cb6
+"raw/monthly enrollment/cpsc_enrollment_2019_09.zip",28732231,223f1924608bad29b8f2c0a53a063f18
+"raw/monthly enrollment/monthly-enrollment-cpsc-september-2020.zip",33933087,0b5a4513871c60affc8dd897e2d06411
+"raw/monthly enrollment/monthly-enrollment-cpsc-september-2021.zip",35416586,e19a2c3d44459bd93ec0ed0908cd319c
+"raw/monthly enrollment/monthly-enrollment-cpsc-september-2022.zip",37546441,9ec8c37a849225d7087884506858363f
+"raw/monthly enrollment/monthly-enrollment-cpsc-september-2023.zip",39312806,8235ab0c39d4d9662840164e21da14b5
+"raw/monthly enrollment/monthly-enrollment-cpsc-september-2024.zip",39347617,24c3df6d9ff4c92d5edf8e2d47bd1884
+"raw/monthly enrollment/monthly-enrollment-cpsc-september-2025.zip",38276075,4bfd92362fe9524d182ed716dd96cba4
+"raw/monthly enrollment/monthly-enrollment-cpsc-september-2026.zip",36181230,4bc14e774f75a81238168b8e227e2eec
+"raw/plan crosswalk/PlanCrosswalk2027_10012026.txt",1128085,c9e106427cb25f8fa43e75edc2f7966e
+"raw/plan crosswalk/plan-crosswalk-2027.zip",676272,7033a9adf2be4f9471d93a2f69a20dc0
+"raw/landscape/CY2027/CY2027_Landscape_202609.csv",77142825,299aeaed0d2cf4398154a86b22a0b4e8
+"raw/landscape/CY2027/cy2027-landscape-202609-1.zip",11964394,dc5df20757498078168ef83f844dd024

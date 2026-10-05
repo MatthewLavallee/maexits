@@ -245,6 +245,26 @@
 # Column aliases for CY2025+ combined landscape files. Each output column
 # must match exactly one of its aliases (CMS renamed "State Name" to
 # "State Territory Name" in CY2026).
+#' D-SNP integration status as CMS's short code
+#'
+#' The CY2023-CY2026 files give CO, HIDE or FIDE; from CY2027 CMS spells
+#' them out ("Coordination Only (CO)"). Returns the short code, keeps "Not
+#' Applicable", turns blanks into NA, and stops on any other value.
+#' @param x Character vector of statuses.
+#' @param what File label for the error message.
+#' @keywords internal
+.dsnp_code <- function(x, what) {
+  x <- trimws(as.character(x))
+  x[x == ""] <- NA_character_
+  code <- sub("^.*\\(\\s*(CO|HIDE|FIDE)\\s*\\)$", "\\1", x)
+  bad <- setdiff(unique(code[!is.na(code)]), c("CO", "HIDE", "FIDE", "Not Applicable"))
+  .vcheck(length(bad) == 0, paste0(
+    "%s has unknown D-SNP integration status(es) %s; map them in .dsnp_code() ",
+    "(R/data_build.R)"), what, paste(sprintf("'%s'", bad), collapse = ", "))
+  code
+}
+
+
 .LANDSCAPE_COLUMNS <- list(
   contract_id = "Contract ID",
   plan_id     = "Plan ID",
@@ -315,8 +335,8 @@
   out <- d[, unname(src), with = FALSE]
   setnames(out, names(src))
   dsnp_col <- "Dual Eligible SNP (D-SNP) Integration Status"
-  out[, dsnp_integration := if (dsnp_col %in% names(d)) d[[dsnp_col]] else NA_character_]
-  out[dsnp_integration == "", dsnp_integration := NA_character_]
+  out[, dsnp_integration := if (dsnp_col %in% names(d))
+    .dsnp_code(d[[dsnp_col]], sprintf("landscape CY%s", key)) else NA_character_]
   out[, year := paste0("CY", key)]
   out
 }

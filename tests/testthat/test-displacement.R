@@ -232,3 +232,10 @@ test_that("built plan details are one row per plan-segment with parsed values", 
   # A Part D plan missing from the Part D report keeps an NA Part C premium
   expect_true(is.na(pd[year == 2023 & contract_id == "H3305" & plan_id == 33, premium_part_c][1]))
 })
+
+test_that("D-SNP integration labels keep CMS's short codes in every year", {
+  expect_equal(.dsnp_code(c("Coordination Only (CO)", "Highly Integrated (HIDE)", "Fully Integrated (FIDE)",
+                            "CO", " FIDE ", "Not Applicable", "", NA), "test"),
+               c("CO", "HIDE", "FIDE", "CO", "FIDE", "Not Applicable", NA, NA))
+  expect_error(.dsnp_code("Partially Integrated (PIDE)", "landscape CY2099"), "unknown D-SNP integration")
+})

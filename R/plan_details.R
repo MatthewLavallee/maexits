@@ -246,12 +246,13 @@
       star_raw = .pick(d, "Overall Star Rating"),
       star_part_c = .parse_star(.pick(d, c("Part C Summary Star Rating", "Star Rating Part C"))),
       star_part_d = .parse_star(.pick(d, c("Part D Summary Star Rating", "Star Rating Part D"))),
-      dsnp_integration = .na_text(.pick(d, c("Integration Status",
-                                             "Dual Eligible SNP (D-SNP) Integration Status"))),
+      dsnp_integration = .dsnp_code(.na_text(.pick(d, c("Integration Status",
+                                             "Dual Eligible SNP (D-SNP) Integration Status"))), lbl),
       dsnp_aip = .yes_no(.pick(d, c("AIP Status", "D-SNP Applicable Integrated Plan (AIP) Identifier"))),
       csnp_conditions = csnp,
       snp_institutional_type = .na_text(.pick(d, "SNP Institutional Type")),
-      zero_dollar_dsnp = .yes_no(.pick(d, "Medicare Zero-Dollar Cost Sharing D-SNP Plan"))
+      zero_dollar_dsnp = .yes_no(.pick(d, c("Medicare Zero-Dollar Cost Sharing D-SNP Plan",
+                                            "Medicare Zero-Dollar Cost Sharing D-SNP")))
     )
   }), fill = TRUE)
 }
@@ -449,7 +450,8 @@ make_plan_details <- function(years = MAEXITS_PLAN_DETAIL_FIRST_YEAR:max(.landsc
   low <- cov[premium < 0.97 | parent < 0.95 | (star < 0.9 & !year %in% MAEXITS_LANDSCAPE_BLANK_STARS)]
   .vcheck(nrow(low) == 0, paste0(
     "plan details coverage dropped in CY%s (premium %s, parent %s, star status %s); check the ",
-    "landscape and Contract Info files for renamed columns"),
+    "landscape and Contract Info files for renamed columns. A landscape file with no star ",
+    "ratings at all belongs in MAEXITS_LANDSCAPE_BLANK_STARS (R/config.R)"),
     paste(low$year, collapse = ","), paste(round(100 * low$premium), collapse = ","),
     paste(round(100 * low$parent), collapse = ","), paste(round(100 * low$star), collapse = ","))
   .vcheck(!anyDuplicated(out, by = key), "plan_details has duplicate year-contract-plan-segment rows")

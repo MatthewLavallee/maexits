@@ -13,11 +13,12 @@ Measures Medicare Advantage (MA) plan exits and the resulting forced disenrollme
 \itemize{
 \item \code{\link[=maexits_catalog]{maexits_catalog()}} lists the datasets and their variables, with a
 \code{counting} note on variables whose values repeat across rows. Each
-dataset also has a help page: \link{displacement}, \link{plan_details},
+dataset also has a help page: \link{displacement}, \link{exits}, \link{plan_details},
 \link{county_panel}, \link{plan_county}, \link{landscape}, \link{enrollment},
 \link{cms_enrollment_data}.
 \item \code{\link[=maexits_data]{maexits_data()}} loads the pipeline's processed tables (who lost their
-plan each year, plan details, county panel, plan-by-county exits,
+plan each year, who was in a plan CMS terminated or cut from the
+county, plan details, county panel, plan-by-county exits,
 landscape, December/January enrollment),
 downloading them once from the package's GitHub data release.
 \item \code{\link[=cms_enrollment]{cms_enrollment()}} loads CMS Monthly Enrollment by

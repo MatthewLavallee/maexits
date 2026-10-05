@@ -550,6 +550,27 @@ test_that("the default end date does not depend on the files chosen", {
   expect_gt(.default_until(), max(.watch_targets()$overdue))
 })
 
+test_that("the targets are one transition, and registered files are done without a check", {
+  n <- max(MAEXITS_XWALK_YEARS) + 1L
+  tg <- .watch_targets()
+  expect_equal(tg$edition, as.character(c(n, n, sprintf("%d-12", n - 1L), sprintf("%d-01", n), n - 1L)))
+  expect_equal(is.na(tg$done[tg$target == "crosswalk"]), !as.character(n) %in% names(MAEXITS_XWALK_FILES))
+  expect_match(.target_done("crosswalk", names(MAEXITS_XWALK_FILES)[1]), "registered in R/config.R")
+  expect_true(is.na(.target_done("landscape", 2099)))
+
+  env <- local_cms()
+  t <- target("crosswalk", 2099, overdue = as.Date("2000-01-01"))[, done := "registered in R/config.R (x.txt)"]
+  r <- check_cms_releases(t, remember = FALSE, quiet = TRUE)
+  expect_equal(r$status, "done")
+  expect_false(r$overdue)
+  expect_length(env$calls, 0)                                   # nothing fetched
+
+  # A schedule whose files are all done stops at its first run
+  dir <- getOption("maexits.watch_dir")
+  .watch_write(list(targets = t, until = Sys.Date() + 30, finished = FALSE))
+  expect_match(run_job(dir, force = TRUE), "Every file is out")
+})
+
 test_that("the job script removes the schedule when the package is gone", {
   dir <- withr::local_tempdir()
   plist <- file.path(dir, "job.plist")

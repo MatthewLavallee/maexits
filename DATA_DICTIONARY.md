@@ -1,6 +1,6 @@
 # Data Dictionary
 
-The package loads these tables with `maexits_data()`. Each has a help page listing every column (`?county_panel`, `?plan_county`, `?displacement`, `?plan_details`, `?landscape`, `?enrollment`), and `maexits_catalog()` returns the same list as a table. This file gives more detail on how each column is built. `plan_county` is `analytictable_augmented.csv` with `plan_key` and `curr_plan_key` added.
+The package loads these tables with `maexits_data()`. Each has a help page listing every column (`?county_panel`, `?plan_county`, `?displacement`, `?exits`, `?plan_details`, `?landscape`, `?enrollment`), and `maexits_catalog()` returns the same list as a table. This file gives more detail on how each column is built. `plan_county` is `analytictable_augmented.csv` with `plan_key` and `curr_plan_key` added.
 
 ## Rows are crosswalk links
 
@@ -105,6 +105,18 @@ One row per December plan × county (`dec_year`, `contract_id`, `plan_id`, `coun
 `lost_coverage` equals `forced_county` in `plan_county`, and the county totals equal `county_panel`'s `_once` columns. Terminations are split by whether the contract is in the January landscape, because from the 2024 crosswalk on CMS labels every termination "Terminated/Non-renewed Contract"; the crosswalk statuses are kept in `xwalk_statuses`.
 
 **Scope and alternatives.** `plan_exits` (the plan left every county), `contract_exits` (the contract offers no plan in January), `contract_exits_county`, `parent_exits_county` (no plan of the same parent organization in the county in January; parents are matched on their December and January names from CPSC Contract Info), and counts of the county's plans next January (`n_plans_jan`: non-SNP, non-Cost plans; `n_plans_jan_other_parent`; `n_parents_jan`; `n_same_snp_type_jan` for SNPs). Plan-, contract- and county-level columns repeat on every row of their plan or county.
+
+## exits.csv (`exits`)
+
+One row per December plan × county (`dec_year`, `contract_id`, `plan_id`, `county_name`, `state_name`): the same plan-counties as `displacement` for the years it covers, plus the newest `dec_year` (`MAEXITS_EXITS_YEARS`) from its September table. Built by `make_exits()`. It answers "what share of MA enrollees were in a plan CMS terminated or cut from their county": `exit_type` is `terminated`, `service_area_reduction` or `none`, from CMS's crosswalk labels checked against the January landscape, and each plan-county appears once, so `sum(dec_enrollment[exit_type != "none"]) / sum(dec_enrollment)` is the share.
+
+| Column | Built from |
+|---|---|
+| `exit_type` | `forced_reason` of the plan-county (in `plan_county`, or the September table for the newest year): `service_area_reduction` as there; `terminated` when every crosswalk link is a termination (a plan mapped to a New Plan that does not serve the county is `none`); the other reasons (moved or consolidated into a plan that does not serve the county, renewal not listed in the county) and plan-counties that kept coverage are `none` |
+| `dec_enrollment`, `dec_enrollment_low`, `dec_src` | December enrollment, as in `displacement`; NA for a `dec_year` whose December file is not in the build yet |
+| `sep_enrollment`, `sep_enrollment_low`, `sep_src` | September enrollment of `dec_year` (`raw/monthly enrollment/`, `MAEXITS_EXITS_MONTH`), built as in `run_preliminary()` for every year in `MAEXITS_EXITS_YEARS` |
+
+September is there so the newest transition can be compared with earlier ones in October, two months before its December file: in 2018–2025 the September share is 0.01–0.28 points above the December one. The build checks that the two months give the same plan-counties and exit types.
 
 ## plan_details.csv (`plan_details`)
 

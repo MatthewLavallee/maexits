@@ -133,6 +133,52 @@ NULL
 NULL
 
 
+#' December plan x county: terminated or cut from the county the next January
+#'
+#' One row per December plan and county (`dec_year`, contract, plan,
+#' county) for every individual-market MA plan and SNP the December
+#' landscape and the crosswalk list, with whether CMS's crosswalk
+#' terminated the plan or cut the county from its service area for the
+#' next January (`exit_type`), and the plan-county's enrollment in
+#' December and in September of `dec_year`. Built by [make_exits()]. Load
+#' it with `maexits_data("exits")`.
+#'
+#' @section Counting:
+#' Each plan-county appears once, so sums count every enrollee once. The
+#' share of December enrollment in plans CMS terminated or cut from the
+#' county is
+#' `sum(dec_enrollment[exit_type != "none"]) / sum(dec_enrollment)`, and
+#' `exit_type` splits it into terminations and service-area reductions.
+#'
+#' @section December and September:
+#' December enrollment covers the transitions in `MAEXITS_XWALK_YEARS`.
+#' September covers `MAEXITS_EXITS_YEARS`, which adds the newest
+#' transition once its crosswalk is registered, two months before its
+#' December enrollment comes out: compare it with earlier years through
+#' `sep_enrollment`.
+#' September gives shares 0.01-0.28 points higher than December
+#' (2018-2025). The plan-counties and `exit_type` are the same for both
+#' months.
+#'
+#' @section What counts as an exit:
+#' `exit_type` uses only CMS's crosswalk labels, checked against the
+#' January landscape for the county: `terminated` when every crosswalk link
+#' of the plan-county is a termination, `service_area_reduction` when the
+#' plan renews with a service-area reduction and no plan it maps to serves
+#' the county. [displacement] also counts as lost coverage the
+#' plan-counties CMS moved to a plan that does not serve the county (by
+#' consolidation or a New Plan link), or renewed without listing in the
+#' county in January (together 0.03-0.31% of December enrollment a year);
+#' here they are `none`.
+#'
+#' @eval .rd_format("exits")
+#' @seealso [maexits_data()], [displacement], [plan_details]
+#' @name exits
+#' @docType data
+#' @keywords datasets
+NULL
+
+
 #' Plan details by contract year
 #'
 #' One row per contract year, contract, plan and segment for the

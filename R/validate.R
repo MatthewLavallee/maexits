@@ -52,14 +52,19 @@
 #' Run this before \code{run_data_pipeline()} (which also calls it). It
 #' lists everything missing at once: unregistered or absent crosswalk
 #' files, every landscape year the build reads, missing or duplicated
-#' December/January CPSC files, missing NBER ratebook years, and the FIPS
-#' and penetration reference files. It also notes inputs already staged for
-#' a later crosswalk year that is not yet in \code{MAEXITS_XWALK_YEARS}.
+#' December/January CPSC files, missing NBER ratebook years, the FIPS
+#' and penetration reference files, and, for the exits table, the September
+#' CPSC file of every year in \code{exits_years} with the crosswalk and
+#' landscape of any of those years past \code{xwalk_years}. It also notes
+#' inputs already staged for a later crosswalk year that is not yet in
+#' \code{MAEXITS_XWALK_YEARS}.
 #'
 #' @param xwalk_years Integer vector of crosswalk years to check.
+#' @param exits_years Crosswalk years of the exits table (default
+#'   \code{MAEXITS_EXITS_YEARS}).
 #' @return Invisibly TRUE; stops with the list of problems otherwise.
 #' @export
-check_inputs <- function(xwalk_years = MAEXITS_XWALK_YEARS) {
+check_inputs <- function(xwalk_years = MAEXITS_XWALK_YEARS, exits_years = MAEXITS_EXITS_YEARS) {
   .vcheck(!anyDuplicated(xwalk_years), "duplicated crosswalk year(s): %s",
           paste(xwalk_years[duplicated(xwalk_years)], collapse = ", "))
   problems <- character(0)
@@ -120,6 +125,30 @@ check_inputs <- function(xwalk_years = MAEXITS_XWALK_YEARS) {
       }
     }
   }
+  # The exits table: September enrollment for each of its years, and the
+  # crosswalk and landscape of years past xwalk_years
+  missing_dec <- setdiff(as.integer(xwalk_years), as.integer(exits_years))
+  if (length(missing_dec)) problems <- c(problems, sprintf(
+    "exits_years (MAEXITS_EXITS_YEARS) must include every crosswalk year; missing %s",
+    paste(missing_dec, collapse = ", ")))
+  for (n in as.integer(exits_years)) {
+    hits <- .cpsc_files("monthly enrollment", n - 1L, MAEXITS_EXITS_MONTH)
+    want <- sprintf("CPSC_Enrollment_Info_%d_%02d.csv", n - 1L, MAEXITS_EXITS_MONTH)
+    if (length(hits) != 1L) problems <- c(problems, sprintf(
+      "raw/monthly enrollment: %s (for the exits table) %s", want,
+      if (length(hits)) sprintf("found %d times", length(hits)) else "not found"))
+    if (!n %in% as.integer(xwalk_years)) {
+      key <- as.character(n)
+      if (!key %in% names(MAEXITS_XWALK_FILES)) {
+        problems <- c(problems, sprintf(
+          "crosswalk %d (for the exits table) is not registered in MAEXITS_XWALK_FILES", n))
+      } else if (!file.exists(here("raw", "plan crosswalk", MAEXITS_XWALK_FILES[[key]]))) {
+        problems <- c(problems, sprintf("crosswalk %d: registered file not found", n))
+      }
+      if (!.landscape_available(n)) problems <- c(problems, sprintf(
+        "landscape CY%d (for the exits table) is missing or not registered in MAEXITS_LANDSCAPE_FILES", n))
+    }
+  }
   for (f in c(MAEXITS_FIPS_LOOKUP_FILE, MAEXITS_PENETRATION_FILE)) {
     if (!file.exists(here("raw", f))) problems <- c(problems,
       sprintf("reference file raw/%s not found", f))
@@ -132,7 +161,8 @@ check_inputs <- function(xwalk_years = MAEXITS_XWALK_YEARS) {
           paste(range(xwalk_years), collapse = "-"))
 
   # Inputs for a later year are expected between the crosswalk release and
-  # the January CPSC release; say so, because the build will not use them.
+  # the January CPSC release; say so (only the exits table reads that year's
+  # crosswalk and landscape, through its September enrollment).
   last <- max(as.integer(xwalk_years))
   later <- setdiff(as.integer(names(MAEXITS_XWALK_FILES)), xwalk_years)
   later <- later[later > last]
