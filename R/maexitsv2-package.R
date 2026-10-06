@@ -3,12 +3,13 @@
 #' @section Loading data:
 #' * [maexits_catalog()] lists the datasets and their variables, with a
 #'   `counting` note on variables whose values repeat across rows. Each
-#'   dataset also has a help page: [displacement], [exits], [plan_details],
+#'   dataset also has a help page: [displacement], [exits], [pdp_exits], [plan_details],
 #'   [county_panel], [plan_county], [landscape], [enrollment],
 #'   [cms_enrollment_data].
 #' * [maexits_data()] loads the pipeline's processed tables (who lost their
 #'   plan each year, who was in a plan CMS terminated or cut from the
-#'   county, plan details, county panel, plan-by-county exits,
+#'   county, standalone Part D plan terminations, plan details, county
+#'   panel, plan-by-county exits,
 #'   landscape, December/January enrollment),
 #'   downloading them once from the package's GitHub data release.
 #' * [cms_enrollment()] loads CMS Monthly Enrollment by

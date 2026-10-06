@@ -25,7 +25,8 @@ files, every landscape year the build reads, missing or duplicated
 December/January CPSC files, missing NBER ratebook years, the FIPS
 and penetration reference files, and, for the exits table, the September
 CPSC file of every year in \code{exits_years} with the crosswalk and
-landscape of any of those years past \code{xwalk_years}. It also notes
+landscape of any of those years past \code{xwalk_years}, and the PDP
+landscapes for the PDP exits table. It also notes
 inputs already staged for a later crosswalk year that is not yet in
 \code{MAEXITS_XWALK_YEARS}.
 }

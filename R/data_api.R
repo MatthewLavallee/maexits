@@ -45,6 +45,10 @@
     keys = c("dec_year", "contract_id", "plan_id", "plan_key", "segment_id",
              "county_name", "state_name", "fips"),
     title = "December plan x county: terminated or service-area reduction, December and September enrollment"),
+  pdp_exits = list(
+    file = "pdp_exits.rds", year_col = "dec_year", plans = TRUE, months = FALSE, geo = "state",
+    keys = c("dec_year", "contract_id", "plan_id", "plan_key", "state", "state_name"),
+    title = "December standalone Part D plan x state: terminated, December and September enrollment"),
   plan_details = list(
     file = "plan_details.rds", year_col = "year", plans = TRUE, months = FALSE, geo = FALSE,
     keys = c("year", "contract_id", "plan_id", "plan_key", "segment_id"),
@@ -88,6 +92,10 @@
 #'   CMS terminated the plan or cut the county from its service area the
 #'   next January, and its December and September enrollment. September
 #'   covers the newest transition before its December file is out.
+#' * `"pdp_exits"` ([pdp_exits]): one row per December standalone Part D
+#'   plan (PDP) x state, with whether CMS terminated it the next January,
+#'   and its December and September enrollment. Filter it by `states`, not
+#'   `counties`.
 #' * `"plan_details"` ([plan_details]): plan x segment x contract year:
 #'   organization and parent, premiums, deductible, out-of-pocket maximum,
 #'   star ratings, SNP details.
@@ -107,11 +115,11 @@
 #' [plan_county]).
 #'
 #' @param dataset One of `"county_panel"`, `"plan_county"`, `"displacement"`,
-#'   `"exits"`, `"plan_details"`, `"landscape"`, `"enrollment"`.
+#'   `"exits"`, `"pdp_exits"`, `"plan_details"`, `"landscape"`, `"enrollment"`.
 #' @param plans Plans to keep: `"H1234-001"` for one plan, `"H1234"` for
 #'   every plan in a contract. Not available for the county panel.
 #' @param years Years to keep: `dec_year` for `county_panel`,
-#'   `plan_county`, `displacement` and `exits`, contract year for `plan_details` and
+#'   `plan_county`, `displacement`, `exits` and `pdp_exits`, contract year for `plan_details` and
 #'   `landscape`, calendar year for `enrollment`.
 #' @param months `enrollment` only: months as `"YYYY-MM"` strings or Dates.
 #' @param states State names or postal abbreviations (`"MD"`, `"Maryland"`).
@@ -141,7 +149,7 @@
 #' }
 #' @export
 maexits_data <- function(dataset = c("county_panel", "plan_county", "displacement", "exits",
-                                     "plan_details", "landscape", "enrollment"),
+                                     "pdp_exits", "plan_details", "landscape", "enrollment"),
                          plans = NULL, years = NULL, months = NULL, states = NULL,
                          counties = NULL, variables = NULL,
                          release = MAEXITS_DATA_RELEASE, refresh = FALSE) {
@@ -152,6 +160,9 @@ maexits_data <- function(dataset = c("county_panel", "plan_county", "displacemen
   }
   if (!is.null(months) && !spec$months) {
     .api_stop("months applies to the enrollment dataset and cms_enrollment(); use years for %s", dataset)
+  }
+  if (identical(spec$geo, "state") && !is.null(counties)) {
+    .api_stop("%s is by plan and state (PDPs are offered state-wide); filter it by states", dataset)
   }
   if (isFALSE(spec$geo) && (!is.null(states) || !is.null(counties))) {
     .api_stop("%s has no counties (one row per plan segment); filter displacement by state or county instead",
@@ -474,6 +485,9 @@ cms_enrollment <- function(months, plans = NULL, states = NULL, counties = NULL,
   # CMS landscape files label DC "Washington D.C." in some years
   out <- tolower(names)
   if ("district of columbia" %in% out) out <- c(out, "washington d.c.")
+  if (any(c("virgin islands", "u.s. virgin islands") %in% out)) {
+    out <- unique(c(out, "virgin islands", "u.s. virgin islands"))
+  }
   out
 }
 

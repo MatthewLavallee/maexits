@@ -1,8 +1,7 @@
 # ============================================================
 # catalog.R — The variable key: one table describing every dataset and
-# variable, used by maexits_catalog() and to generate the ?county_panel,
-# ?plan_county, ?landscape, ?enrollment and ?cms_enrollment help pages, so
-# the two never disagree.
+# variable, used by maexits_catalog() and to generate each dataset's help
+# page (?county_panel, ?exits, ?pdp_exits, ...), so the two never disagree.
 #
 # The `counting` column says whether a variable's values repeat across
 # rows. plan_county is a table of crosswalk links: a prior plan-county with
@@ -262,6 +261,28 @@
     v("exits", "sep_enrollment_low", "As sep_enrollment with suppressed cells as 1 (lower bound)."),
     v("exits", "sep_src", "Source of sep_enrollment: reported, suppressed, mixed, or no_record."),
 
+    # --- pdp_exits ---------------------------------------------------------
+    v("pdp_exits", "dec_year", "December year of the transition (2026 = December 2026 to January 2027)."),
+    plan("pdp_exits"),
+    v("pdp_exits", "state", "State or territory postal code. PDPs are offered state-wide (by PDP region), so each plan has one row per state it is offered in."),
+    v("pdp_exits", "state_name", "State or territory name."),
+    v("pdp_exits", "plan_name", "Plan name (December PDP landscape)."),
+    v("pdp_exits", "org_name", "Organization name (December PDP landscape: company name to CY2024, marketing name from CY2025)."),
+    v("pdp_exits", "exit_type", paste(
+      "What happens to the plan in this state for the next January: terminated (every crosswalk",
+      "link is a termination and no plan it maps to is offered in the state, or CMS terminated",
+      "the contract outside the crosswalk; see cms_terminated) or none, including plans",
+      "consolidated into another PDP. service_area_reduction is a possible level but CMS's",
+      "crosswalk has none for individual PDPs.")),
+    v("pdp_exits", "xwalk_statuses", "The CMS crosswalk statuses of the plan's links, joined with \" + \"."),
+    v("pdp_exits", "cms_terminated", "TRUE for the plans of a contract CMS terminated outside the crosswalk (MAEXITS_CMS_TERMINATED_CONTRACTS): Clear Spring Health (S6946), terminated for 2025 although the 2025 crosswalk lists 30 of its 33 plans as renewing."),
+    v("pdp_exits", "dec_enrollment", "December enrollment of the plan in the state: reported counts plus 10 per CMS-suppressed cell; 0 with no CMS record. NA for the newest dec_year until December enrollment is out. Enrollees living in a state where the plan is not offered are not included."),
+    v("pdp_exits", "dec_enrollment_low", "As dec_enrollment with suppressed cells as 1 (lower bound)."),
+    v("pdp_exits", "dec_src", "Source of dec_enrollment: reported, suppressed, mixed, or no_record."),
+    v("pdp_exits", "sep_enrollment", "September enrollment of the plan in the state (same rules as dec_enrollment), every dec_year."),
+    v("pdp_exits", "sep_enrollment_low", "As sep_enrollment with suppressed cells as 1 (lower bound)."),
+    v("pdp_exits", "sep_src", "Source of sep_enrollment: reported, suppressed, mixed, or no_record."),
+
     # --- plan_details ----------------------------------------------------
     v("plan_details", "year", "Contract (plan) year."),
     plan("plan_details"),
@@ -318,11 +339,12 @@
 #' The variable key: every dataset the package can load, a description of
 #' each variable, and a `counting` note for variables whose values repeat
 #' across rows (see the "Counting rows" section of [plan_county]). Datasets
-#' "county_panel", "plan_county", "displacement", "plan_details",
-#' "landscape" and "enrollment" are loaded with [maexits_data()];
-#' "cms_enrollment" with [cms_enrollment()]. The same information is in the
-#' help pages `?county_panel`, `?plan_county`, `?displacement`,
-#' `?plan_details`, `?landscape`, `?enrollment` and `?cms_enrollment`.
+#' "county_panel", "plan_county", "displacement", "exits", "pdp_exits",
+#' "plan_details", "landscape" and "enrollment" are loaded with
+#' [maexits_data()]; "cms_enrollment" with [cms_enrollment()]. The same
+#' information is in the help pages `?county_panel`, `?plan_county`,
+#' `?displacement`, `?exits`, `?pdp_exits`, `?plan_details`, `?landscape`,
+#' `?enrollment` and `?cms_enrollment`.
 #'
 #' @param dataset Optional dataset name to show only its variables.
 #' @return A data.table with columns dataset, variable, description, counting.

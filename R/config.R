@@ -74,6 +74,33 @@ MAEXITS_EXITS_YEARS <- 2019:2027
 # September N-1 for crosswalk year N.
 MAEXITS_EXITS_MONTH <- 9L
 
+# CMS standalone drug plan (PDP) landscape files, relative to raw/landscape/,
+# for the PDP exits table (make_pdp_exits()). CY2016-CY2023 are zips of CSVs;
+# CY2024 is a main and a sanctioned csv. From CY2025 PDPs are the
+# "Contract Category Type" PDP rows of the combined file registered in
+# MAEXITS_LANDSCAPE_FILES, so nothing needs registering here.
+MAEXITS_PDP_LANDSCAPE_FILES <- list(
+  "2016" = "CY2016/2016 PDP Landscape Source Files (v 04 22 16).zip",
+  "2017" = "CY2017/2017 PDP Landscape Source Files (v 10 18 16).zip",
+  "2018" = "CY2018/2018 PDP Landscape Source Files (v 10 14 17).zip",
+  "2019" = "CY2019/2019 PDP Landscape Source Files (v 10 12 18).zip",
+  "2020" = "CY2020/2020 PDP Landscape Source Files (v 10 15 19).zip",
+  "2021" = "CY2021/2021 PDP Landscape Source Files (v 10 15 20).zip",
+  "2022" = "CY2022/2022 PDP Landscape Source Files (v 10 26 21).zip",
+  "2023" = "CY2023/2023 PDP Landscape Source File (v 10 14 2022).zip",
+  "2024" = c("CY2024/csv version/CY2024_Landscape_PDP_20240628.csv",
+             "CY2024/csv version/sanctioned plans/CY2024_Landscape_PDP_sanctioned_20240628.csv")
+)
+
+# Contracts CMS terminated outside the crosswalk, by crosswalk year: the
+# crosswalk lists their plans as renewing, but CMS ended the contract and the
+# January landscape no longer lists it. Their plans count as terminated.
+#   2025: S6946, Clear Spring Health's PDP contract, terminated by CMS
+#         (notice of 13 October 2023, effective 31 December 2024).
+MAEXITS_CMS_TERMINATED_CONTRACTS <- list(
+  "2025" = "S6946"
+)
+
 # Plan details (make_plan_details()) are built from this contract year on:
 # the first December the pipeline covers.
 MAEXITS_PLAN_DETAIL_FIRST_YEAR <- 2018L

@@ -1,6 +1,6 @@
 # Data Dictionary
 
-The package loads these tables with `maexits_data()`. Each has a help page listing every column (`?county_panel`, `?plan_county`, `?displacement`, `?exits`, `?plan_details`, `?landscape`, `?enrollment`), and `maexits_catalog()` returns the same list as a table. This file gives more detail on how each column is built. `plan_county` is `analytictable_augmented.csv` with `plan_key` and `curr_plan_key` added.
+The package loads these tables with `maexits_data()`. Each has a help page listing every column (`?county_panel`, `?plan_county`, `?displacement`, `?exits`, `?pdp_exits`, `?plan_details`, `?landscape`, `?enrollment`), and `maexits_catalog()` returns the same list as a table. This file gives more detail on how each column is built. `plan_county` is `analytictable_augmented.csv` with `plan_key` and `curr_plan_key` added.
 
 ## Rows are crosswalk links
 
@@ -117,6 +117,17 @@ One row per December plan × county (`dec_year`, `contract_id`, `plan_id`, `coun
 | `sep_enrollment`, `sep_enrollment_low`, `sep_src` | September enrollment of `dec_year` (`raw/monthly enrollment/`, `MAEXITS_EXITS_MONTH`), built as in `run_preliminary()` for every year in `MAEXITS_EXITS_YEARS` |
 
 September is there so the newest transition can be compared with earlier ones in October, two months before its December file: in 2018–2025 the September share is 0.01–0.28 points above the December one. The build checks that the two months give the same plan-counties and exit types.
+
+## pdp_exits.csv (`pdp_exits`)
+
+One row per December standalone Part D plan (PDP) × state (`dec_year`, `contract_id`, `plan_id`, `state`), built by `make_pdp_exits()` for the same years as `exits`. The universe is the individual-market PDPs (S contracts, plan IDs below 800) the December PDP landscape lists for the state; PDPs are offered by region, so the state replaces the county.
+
+| Column | Built from |
+|---|---|
+| `exit_type` | The plan's links in the next crosswalk, checked against the January PDP landscape: `terminated` when every link is a termination and no successor is offered in the state, or when the contract is in `MAEXITS_CMS_TERMINATED_CONTRACTS` (`cms_terminated`); otherwise `none`. CMS's crosswalk has no service-area reductions for individual PDPs, so `service_area_reduction` does not occur. |
+| `dec_enrollment`, `sep_enrollment` (and `_low`, `_src`) | CPSC enrollment of the plan in the state, summed over its counties: reported counts plus 10 per suppressed cell (`_low`: 1). Rows in other states (enrollees outside the plan's region) are left out. December is NA for the newest `dec_year`. |
+
+`MAEXITS_CMS_TERMINATED_CONTRACTS` holds S6946, Clear Spring Health's PDP contract: CMS terminated it for 2025 (notice of 13 October 2023), while the 2025 crosswalk lists 30 of its 33 plans as renewing and the CY2025 landscape no longer lists them.
 
 ## plan_details.csv (`plan_details`)
 

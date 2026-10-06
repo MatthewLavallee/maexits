@@ -54,6 +54,7 @@ Loaders filter by `plans`, `states`, `counties`, `years` (`months` for enrollmen
 | Dataset | One row per | Contents |
 |---|---|---|
 | `exits` | December plan × county | whether CMS terminated the plan or cut the county from its service area the next January; December and September enrollment (September covers the newest year before its December file is out) |
+| `pdp_exits` | December standalone Part D plan × state | whether CMS terminated the drug plan the next January; December and September enrollment |
 | `displacement` | December plan × county | January outcome, lost coverage, whether the plan, contract or parent left, the county's plans next January, plan details |
 | `plan_details` | plan × segment × year | organization and parent, premiums, deductible, out-of-pocket maximum, star ratings, SNP details |
 | `county_panel` | county × year | exit rate, displaced enrollment, December and January enrollment, 2018 penetration, benchmark |
@@ -63,9 +64,9 @@ Loaders filter by `plans`, `states`, `counties`, `years` (`months` for enrollmen
 
 Each dataset has a help page (`?displacement`), and [DATA_DICTIONARY.md](DATA_DICTIONARY.md) defines every column.
 
-- **Counting.** `displacement` and `exits` have one row per plan-county, so sums count each enrollee once. `plan_county` has one row per crosswalk link, so a plan's enrollment can repeat across rows; its `_once` columns, and `county_panel`'s, count each plan-county once. The `counting` column of `maexits_catalog()` flags every such column.
-- **Suppressed counts.** CMS suppresses counts under 11. In `displacement`, `exits`, `plan_county` and `county_panel` each suppressed cell counts as 10, and the `_low` columns count it as 1. `enrollment` leaves them out of its totals and counts them in `n_suppressed`.
-- **Plan universe.** Individual-market MA plans and SNPs; standalone drug plans, Medicare-Medicaid Plans and employer group plans are excluded. `enrollment` and `cms_enrollment()` hold every plan in the CMS files.
+- **Counting.** `displacement` and `exits` have one row per plan-county, and `pdp_exits` one per plan-state, so sums count each enrollee once. `plan_county` has one row per crosswalk link, so a plan's enrollment can repeat across rows; its `_once` columns, and `county_panel`'s, count each plan-county once. The `counting` column of `maexits_catalog()` flags every such column.
+- **Suppressed counts.** CMS suppresses counts under 11. In `displacement`, `exits`, `pdp_exits`, `plan_county` and `county_panel` each suppressed cell counts as 10, and the `_low` columns count it as 1. `enrollment` leaves them out of its totals and counts them in `n_suppressed`.
+- **Plan universe.** Individual-market MA plans and SNPs; standalone drug plans, Medicare-Medicaid Plans and employer group plans are excluded. `pdp_exits` covers individual-market standalone drug plans, and `enrollment` and `cms_enrollment()` hold every plan in the CMS files.
 
 ## Building the data
 

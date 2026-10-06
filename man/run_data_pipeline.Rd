@@ -34,7 +34,7 @@ Invisibly returns the final county-year panel data.table.
 Runs all data construction steps in order, passing in-memory
 data.tables between steps. Inputs are checked first
 (\code{check_inputs()}), every step runs its validation checks, and
-nothing is written until the whole run has succeeded; the nine derived
+nothing is written until the whole run has succeeded; the ten derived
 tables are then written to a staging folder and moved into
 \code{out_dir} together, so a failed run never leaves a mix of old and
 new files.

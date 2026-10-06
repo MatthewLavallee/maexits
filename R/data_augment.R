@@ -616,7 +616,7 @@ make_county_panel <- function(at = NULL, save = TRUE) {
 #' Runs all data construction steps in order, passing in-memory
 #' data.tables between steps. Inputs are checked first
 #' (\code{check_inputs()}), every step runs its validation checks, and
-#' nothing is written until the whole run has succeeded; the nine derived
+#' nothing is written until the whole run has succeeded; the ten derived
 #' tables are then written to a staging folder and moved into
 #' \code{out_dir} together, so a failed run never leaves a mix of old and
 #' new files.
@@ -674,6 +674,9 @@ run_data_pipeline <- function(save = TRUE, verbose = TRUE,
   message("\n=== Step 10: Building exits table ===")
   exits <- make_exits(at_aug, proxy_at = .proxy_augmented(exits_years), save = FALSE)
 
+  message("\n=== Step 11: Building PDP exits table ===")
+  pdp_exits <- make_pdp_exits(exits_years, xwalk_years = xwalk_years, save = FALSE)
+
   if (save) {
     # analytictable.csv holds the table after FIPS and penetration (no
     # benchmark), as in the step-by-step path.
@@ -686,7 +689,8 @@ run_data_pipeline <- function(save = TRUE, verbose = TRUE,
       county_panel = panel,
       plan_details = details,
       displacement = displacement,
-      exits = exits
+      exits = exits,
+      pdp_exits = pdp_exits
     ), out_dir)
   }
 

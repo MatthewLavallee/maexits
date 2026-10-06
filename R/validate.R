@@ -55,7 +55,8 @@
 #' December/January CPSC files, missing NBER ratebook years, the FIPS
 #' and penetration reference files, and, for the exits table, the September
 #' CPSC file of every year in \code{exits_years} with the crosswalk and
-#' landscape of any of those years past \code{xwalk_years}. It also notes
+#' landscape of any of those years past \code{xwalk_years}, and the PDP
+#' landscapes for the PDP exits table. It also notes
 #' inputs already staged for a later crosswalk year that is not yet in
 #' \code{MAEXITS_XWALK_YEARS}.
 #'
@@ -147,6 +148,22 @@ check_inputs <- function(xwalk_years = MAEXITS_XWALK_YEARS, exits_years = MAEXIT
       }
       if (!.landscape_available(n)) problems <- c(problems, sprintf(
         "landscape CY%d (for the exits table) is missing or not registered in MAEXITS_LANDSCAPE_FILES", n))
+    }
+  }
+  # The PDP exits table: PDP landscapes for December and January of each
+  # exits year (CY2025 on, the combined landscape checked above)
+  for (cy in (min(as.integer(exits_years)) - 1L):max(as.integer(exits_years))) {
+    key <- as.character(cy)
+    if (key %in% names(MAEXITS_PDP_LANDSCAPE_FILES)) {
+      f <- here("raw", "landscape", MAEXITS_PDP_LANDSCAPE_FILES[[key]])
+      if (!all(file.exists(f))) problems <- c(problems, sprintf(
+        "PDP landscape CY%d (for the PDP exits table) not found: %s", cy, paste(f[!file.exists(f)], collapse = ", ")))
+    } else if (cy <= 2024L) {
+      problems <- c(problems, sprintf(
+        "PDP landscape CY%d is not registered in MAEXITS_PDP_LANDSCAPE_FILES", cy))
+    } else if (!.landscape_available(cy)) {
+      problems <- c(problems, sprintf(
+        "landscape CY%d (PDP rows, for the PDP exits table) is missing or not registered", cy))
     }
   }
   for (f in c(MAEXITS_FIPS_LOOKUP_FILE, MAEXITS_PENETRATION_FILE)) {

@@ -5,8 +5,8 @@
 \title{Load a Processed Dataset}
 \usage{
 maexits_data(
-  dataset = c("county_panel", "plan_county", "displacement", "exits", "plan_details",
-    "landscape", "enrollment"),
+  dataset = c("county_panel", "plan_county", "displacement", "exits", "pdp_exits",
+    "plan_details", "landscape", "enrollment"),
   plans = NULL,
   years = NULL,
   months = NULL,
@@ -19,13 +19,13 @@ maexits_data(
 }
 \arguments{
 \item{dataset}{One of \code{"county_panel"}, \code{"plan_county"}, \code{"displacement"},
-\code{"exits"}, \code{"plan_details"}, \code{"landscape"}, \code{"enrollment"}.}
+\code{"exits"}, \code{"pdp_exits"}, \code{"plan_details"}, \code{"landscape"}, \code{"enrollment"}.}
 
 \item{plans}{Plans to keep: \code{"H1234-001"} for one plan, \code{"H1234"} for
 every plan in a contract. Not available for the county panel.}
 
 \item{years}{Years to keep: \code{dec_year} for \code{county_panel},
-\code{plan_county}, \code{displacement} and \code{exits}, contract year for \code{plan_details} and
+\code{plan_county}, \code{displacement}, \code{exits} and \code{pdp_exits}, contract year for \code{plan_details} and
 \code{landscape}, calendar year for \code{enrollment}.}
 
 \item{months}{\code{enrollment} only: months as \code{"YYYY-MM"} strings or Dates.}
@@ -74,6 +74,10 @@ lost their plan; each plan-county appears once.
 CMS terminated the plan or cut the county from its service area the
 next January, and its December and September enrollment. September
 covers the newest transition before its December file is out.
+\item \code{"pdp_exits"} (\link{pdp_exits}): one row per December standalone Part D
+plan (PDP) x state, with whether CMS terminated it the next January,
+and its December and September enrollment. Filter it by \code{states}, not
+\code{counties}.
 \item \code{"plan_details"} (\link{plan_details}): plan x segment x contract year:
 organization and parent, premiums, deductible, out-of-pocket maximum,
 star ratings, SNP details.

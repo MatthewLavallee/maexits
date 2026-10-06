@@ -15,7 +15,7 @@
 #'
 #' Maintainer tool. Reads the derived tables in `derived_dir` and writes, to
 #' `out_dir`, the compressed files that [maexits_data()] downloads
-#' (`county_panel.rds`, `plan_county.rds`, `displacement.rds`, `exits.rds`,
+#' (`county_panel.rds`, `plan_county.rds`, `displacement.rds`, `exits.rds`, `pdp_exits.rds`,
 #' `plan_details.rds`, `landscape.rds`, `enrollment.rds`) and a
 #' `manifest.csv` with row counts and md5
 #' checksums. It adds a `plan_key` column ("H1234-001") to the plan-level
@@ -64,6 +64,9 @@ prepare_data_release <- function(out_dir, derived_dir = here("trunk", "derived")
   exits <- add_plan_key(fread(src("exits.csv"), na.strings = c("", "NA")))
   exits[, exit_type := factor(exit_type, levels = .EXIT_TYPES)]
   tables$exits <- exits
+  pdp <- add_plan_key(fread(src("pdp_exits.csv"), na.strings = c("", "NA")))
+  pdp[, exit_type := factor(exit_type, levels = .EXIT_TYPES)]
+  tables$pdp_exits <- pdp
   details <- fread(src("plan_details.csv"), na.strings = c("", "NA"))
   details[, contract_effective_date := as.Date(contract_effective_date)]
   tables$plan_details <- add_plan_key(details)

@@ -17,6 +17,7 @@ maexitsv2/
 │   ├── plan_details.R          # make_plan_details(): premiums, MOOP, stars, SNP details by plan and year
 │   ├── displacement.R          # make_displacement(): one row per December plan x county, with its January outcome
 │   ├── exits.R                 # make_exits(): December plan x county, CMS's terminations and SARs, December and September enrollment
+│   ├── pdp_exits.R             # make_pdp_exits(): December standalone Part D plan x state, terminations, December and September enrollment
 │   ├── preliminary.R           # run_preliminary() / backtest_preliminary(): estimate before Dec/Jan CPSC
 │   ├── release_watch.R         # check_cms_releases(), schedule_release_check(): know when next cycle's files are out
 │   ├── data_api.R              # maexits_data(), cms_enrollment(): load and filter data
@@ -51,7 +52,7 @@ unzip derived_data.zip
 
 (Or download `derived_data.zip` from the release page on GitHub.)
 
-This restores the full set of derived tables to `trunk/derived/` (`december_enrollment.csv`, `january_enrollment.csv`, `landscape.csv`, `analytictable.csv`, `analytictable_augmented.csv`, `county_panel.csv`, `plan_details.csv`, `displacement.csv`, `exits.csv`) and lets you skip the ~6 GB raw rebuild entirely.
+This restores the full set of derived tables to `trunk/derived/` (`december_enrollment.csv`, `january_enrollment.csv`, `landscape.csv`, `analytictable.csv`, `analytictable_augmented.csv`, `county_panel.csv`, `plan_details.csv`, `displacement.csv`, `exits.csv`, `pdp_exits.csv`) and lets you skip the ~6 GB raw rebuild entirely.
 
 **(b) County panel only.** `trunk/derived/county_panel.csv` (the analysis-ready county × year panel, ~6 MB) is committed uncompressed and is available immediately after cloning — no unzip required. This is sufficient for all geographic-analysis functions.
 
@@ -82,6 +83,7 @@ The pipeline reads files by exact folder/filename patterns. The tree below shows
 - Enrollment: for each crosswalk year N in `MAEXITS_XWALK_YEARS` (`R/config.R`, currently 2019-2026) the build needs **December enrollment for N-1** and **January enrollment for N**, i.e. December 2018-2025 and January 2019-2026. The SSA↔FIPS lookup used by `add_fips()` and `add_benchmark()` is `MAEXITS_FIPS_LOOKUP_FILE` (`raw/january enrollment/CPSC_Enrollment_2025_01/CPSC_Enrollment_Info_2025_01.csv`), so that file must be present.
 - Landscape: `make_landscape()` reads **CY2016 through the last crosswalk year** (CY2026 today; PDP rows dropped).
 - Crosswalk: one registered file per year in `MAEXITS_XWALK_FILES` → crosswalk years **2019-2026**, plus **2027** for the exits table.
+- PDP exits table: the PDP landscape for CY2018 through the last exits year: the CY2016-CY2023 PDP zips and CY2024 csvs registered in `MAEXITS_PDP_LANDSCAPE_FILES` (in the `raw/landscape/CY<year>/` folders, from the same CMS page as the MA landscape), then the PDP rows of the combined CY2025+ files.
 - Exits table: for each crosswalk year N in `MAEXITS_EXITS_YEARS` (currently 2019-2027) it needs **September N-1 CPSC** in `raw/monthly enrollment/`, and for N past `MAEXITS_XWALK_YEARS` the N crosswalk and CY N landscape (today the 2027 crosswalk and CY2027 landscape).
 - Ratebook: `add_benchmark()` reads `countyrate<Y>.csv` for every `dec_year` Y in the table → **2018-2025** today; a missing year stops the build.
 - Penetration: single file, **2018-12** only.
@@ -190,7 +192,7 @@ devtools::load_all(".")
 
 # Check that every input exists, then run the full build: enrollment ->
 # landscape -> analytic table -> FIPS/penetration -> benchmark -> augment
-# -> county panel -> plan details -> displacement -> exits.
+# -> county panel -> plan details -> displacement -> exits -> PDP exits.
 check_inputs()
 panel <- run_data_pipeline(save = TRUE, verbose = TRUE)
 
@@ -198,7 +200,7 @@ panel <- run_data_pipeline(save = TRUE, verbose = TRUE)
 # run_data_pipeline(out_dir = "/tmp/maexits_trial")
 ```
 
-`run_data_pipeline()` checks its inputs first, passes in-memory tables between steps, and runs the validation checks in `R/validate.R` along the way. It writes nothing until the whole run has succeeded. Then it writes all nine tables to `out_dir` (default `trunk/derived/`) together, so a failed run never leaves a mix of old and new files. A full build takes about 10 minutes and produces no warnings.
+`run_data_pipeline()` checks its inputs first, passes in-memory tables between steps, and runs the validation checks in `R/validate.R` along the way. It writes nothing until the whole run has succeeded. Then it writes all ten tables to `out_dir` (default `trunk/derived/`) together, so a failed run never leaves a mix of old and new files. A full build takes about 10 minutes and produces no warnings.
 
 Individual steps can also be run on their own. Each function reads its inputs from `trunk/derived/` when its argument is `NULL`. Pass the landscape and the benchmarked table along explicitly, because `add_benchmark()` does not write a file:
 
@@ -214,6 +216,7 @@ panel <- make_county_panel(at)                        # county_panel.csv (county
 details <- make_plan_details()                        # plan_details.csv (plan x segment x contract year)
 ds  <- make_displacement(at, landscape = ls, plan_details = details, panel = panel)  # displacement.csv
 ex  <- make_exits(at)                                 # exits.csv (builds the September tables from raw/)
+pdp <- make_pdp_exits()                               # pdp_exits.csv (PDP landscapes, crosswalks, CPSC)
 ```
 
 ## Annual update (each new cycle)
@@ -293,6 +296,7 @@ testthat::test_dir("tests/testthat")                      #   checked against pr
 | `analytictable_augmented.csv` | crosswalk link × county × `dec_year` | Adds `benchmark`, the exit flags (`sar_dropped`, `forced`, `forced_county`, `forced_reason`), `role`, and the counting columns (`prev_links`, `dec_enrollment_once`, `dec_enrollment_split`, ...) |
 | `plan_details.csv` | contract year × plan × segment | Plan characteristics from the landscape files, the Part D Plan and Premium reports and CPSC Contract Info (`make_plan_details()`) |
 | `displacement.csv` | December plan × county | One row per December plan-county: outcome in January, lost coverage, scope flags, alternatives, plan details (`make_displacement()`) |
+| `pdp_exits.csv` | December standalone Part D plan × state | One row per December PDP-state: whether CMS terminated the plan the next January (crosswalk, plus contracts in `MAEXITS_CMS_TERMINATED_CONTRACTS`), with December and September enrollment (`make_pdp_exits()`) |
 | `exits.csv` | December plan × county | One row per December plan-county: whether CMS terminated the plan or cut the county (SAR) the next January, with December and September enrollment; September runs through the newest registered crosswalk (`make_exits()`) |
 | `county_panel.csv` | county × `dec_year` | Analysis-ready panel: exit rate, displaced enrollment, enrollment change, incumbent and new-entrant enrollment, exit group, `pen_quartile`, each summed over links and counted once per plan-county (`_once`) (committed uncompressed) |
 

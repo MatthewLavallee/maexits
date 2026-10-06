@@ -179,6 +179,51 @@ NULL
 NULL
 
 
+#' Standalone Part D plans (PDPs) CMS terminated for the next January
+#'
+#' One row per December standalone prescription drug plan (PDP) and state
+#' (`dec_year`, contract, plan, state) for every individual-market PDP the
+#' December PDP landscape lists (S contracts, plan IDs below 800), with
+#' whether CMS terminated the plan for the next January (`exit_type`) and
+#' the plan's enrollment in the state in December and in September of
+#' `dec_year`. Built by [make_pdp_exits()]. Load it with
+#' `maexits_data("pdp_exits")`; filter it by `states`.
+#'
+#' @section Counting:
+#' Each plan-state appears once, so sums count every enrollee once. The
+#' share of PDP enrollment in terminated plans is
+#' `sum(sep_enrollment[exit_type == "terminated"]) / sum(sep_enrollment)`
+#' (or with `dec_enrollment` for the years it covers). December and
+#' September give shares within 0.05 points of each other (2018-2025).
+#'
+#' @section What counts as an exit:
+#' PDPs are offered region-wide, and CMS's crosswalk has no service-area
+#' reductions for individual PDPs: a plan leaving a region is terminated
+#' or consolidated into another plan. `exit_type` is `terminated` when
+#' every crosswalk link of the plan is a termination and no plan it maps to
+#' is offered in the state, and for the contracts CMS terminated outside the
+#' crosswalk (`cms_terminated`; `MAEXITS_CMS_TERMINATED_CONTRACTS` in
+#' R/config.R): Clear Spring Health (S6946), terminated by CMS for 2025
+#' while the 2025 crosswalk lists 30 of its 33 plans as renewing (333,633
+#' of its 336,213 September 2024 enrollees in the table). Consolidations
+#' are `none`. CMS reassigns low-income subsidy enrollees of terminated
+#' PDPs to another plan.
+#'
+#' @section Universe:
+#' Enrollment is counted in the states where the December landscape offers
+#' the plan; PDP enrollees living elsewhere and employer plans are left
+#' out. Those enrollees are almost all in CMS-suppressed cells: 5-9% of CPSC
+#' PDP enrollment in 2018-2025 and under 5% in 2026 with each suppressed
+#' cell counted as 10, about 1% with each counted as 1.
+#'
+#' @eval .rd_format("pdp_exits")
+#' @seealso [maexits_data()], [exits]
+#' @name pdp_exits
+#' @docType data
+#' @keywords datasets
+NULL
+
+
 #' Plan details by contract year
 #'
 #' One row per contract year, contract, plan and segment for the

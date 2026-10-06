@@ -16,11 +16,12 @@ A data.table with columns dataset, variable, description, counting.
 The variable key: every dataset the package can load, a description of
 each variable, and a \code{counting} note for variables whose values repeat
 across rows (see the "Counting rows" section of \link{plan_county}). Datasets
-"county_panel", "plan_county", "displacement", "plan_details",
-"landscape" and "enrollment" are loaded with \code{\link[=maexits_data]{maexits_data()}};
-"cms_enrollment" with \code{\link[=cms_enrollment]{cms_enrollment()}}. The same information is in the
-help pages \code{?county_panel}, \code{?plan_county}, \code{?displacement},
-\code{?plan_details}, \code{?landscape}, \code{?enrollment} and \code{?cms_enrollment}.
+"county_panel", "plan_county", "displacement", "exits", "pdp_exits",
+"plan_details", "landscape" and "enrollment" are loaded with
+\code{\link[=maexits_data]{maexits_data()}}; "cms_enrollment" with \code{\link[=cms_enrollment]{cms_enrollment()}}. The same
+information is in the help pages \code{?county_panel}, \code{?plan_county},
+\code{?displacement}, \code{?exits}, \code{?pdp_exits}, \code{?plan_details}, \code{?landscape},
+\code{?enrollment} and \code{?cms_enrollment}.
 }
 \examples{
 maexits_catalog()
