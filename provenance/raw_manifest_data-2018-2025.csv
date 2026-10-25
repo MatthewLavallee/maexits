@@ -363,3 +363,129 @@ path,bytes,md5
 "raw/plan crosswalk/plan-crosswalk-2027.zip",676272,7033a9adf2be4f9471d93a2f69a20dc0
 "raw/landscape/CY2027/CY2027_Landscape_202609.csv",77142825,299aeaed0d2cf4398154a86b22a0b4e8
 "raw/landscape/CY2027/cy2027-landscape-202609-1.zip",11964394,dc5df20757498078168ef83f844dd024
+"raw/medicare monthly enrollment/Medicare Monthly Enrollment Data_June 2026.csv",214678392,2977926ac25f23c4eb28f118abcdddd2
+"raw/pbp/CY2018/pbp-benefits-2018-q1.zip",13449834,73d511ea6ec7d4bac27f448f7bcd82e2
+"raw/pbp/CY2018/pbp-benefits-2018-q2.zip",12709924,c32b126b1f189e5500761ec9f16fd431
+"raw/pbp/CY2018/pbp-benefits-2018-q3.zip",12710849,32ab58c4dac9501cf8cf702b64359091
+"raw/pbp/CY2018/pbp-benefits-2018-q4.zip",12763443,b336ec84fc21a5f3cf7b6c57363e0092
+"raw/pbp/CY2019/pbp-benefits-2019-q1.zip",15169599,7b63e44ba059a206f71ad04f37d6a9ab
+"raw/pbp/CY2019/pbp-benefits-2019-q2.zip",15536127,5be7ea939f0c4de64c1b352ec2055bfb
+"raw/pbp/CY2019/pbp-benefits-2019-q3.zip",15538436,ea3b2c243c6d979c551ec5cca26cd2dd
+"raw/pbp/CY2019/pbp-benefits-2019-q4.zip",15538983,590e37311904a3e7012c2a9ab1664b57
+"raw/pbp/CY2020/pbp-benefits-2020-q1.zip",18699539,a0629d15ad785cab5ea3e9a3952f1494
+"raw/pbp/CY2020/pbp-benefits-2020-quarter-2.zip",19097574,37a937016620fc2c6863178ffeded088
+"raw/pbp/CY2020/pbp-benefits-2020-quarter-4.zip",19099907,a17f931146210acfc97bb8afd2026976
+"raw/pbp/CY2021/pbp-benefits-2021-01122021.zip",20713209,79085f864762cf9cecfaaa2c524b492b
+"raw/pbp/CY2021/pbp-benefits-2021-04012021.zip",20716060,c39c2e437e17631ee9624a67fcff7406
+"raw/pbp/CY2021/pbp-benefits-2021-10142020.zip",20165656,e098d4ca4df6936cc3185e0ee6f29768
+"raw/pbp/CY2021/pbp-benefits-2021-updated-07012021.zip",20716708,a59e1c7645b526c60ae9e4d647cf37a4
+"raw/pbp/CY2021/pbp-benefits-2021-updated-08022021.zip",20716661,c16cd5a0ac270bc8874685211675b24b
+"raw/pbp/CY2022/pbp-benefits-2022-quarter-1.zip",22400675,796b19620a35ebc9f23d264170bb72fa
+"raw/pbp/CY2022/pbp-benefits-2022-quarter-2.zip",22783443,63d6093f328899bb8cedccd7f3786476
+"raw/pbp/CY2022/pbp-benefits-2022-updated-07012022.zip",22775400,a7a3e8a01e54da1612d9936317c903fa
+"raw/pbp/CY2023/pbp-benefits-2023-quarter-1.zip",23182261,7c9aa78c17f3ca4d97acf413f340e34c
+"raw/pbp/CY2023/pbp-benefits-2023-quarter-2.zip",24065832,d946b682e5758eeb9f1291f62870acd2
+"raw/pbp/CY2023/pbp-benefits-2023-quarter-3.zip",24067037,9a00fd3ac45e93dda756e681bc041980
+"raw/pbp/CY2023/pbp-benefits-2023-quarter-4.zip",24068410,a07b008fab0bbfcaa435f8bcd579f245
+"raw/pbp/CY2024/pbp-benefits-2024-quarter-1.zip",25157570,07dac53bf291aec88904a5351156c086
+"raw/pbp/CY2024/pbp-benefits-2024-quarter-3.zip",25170659,3df63aff931dc333441702c77b0cff55
+"raw/pbp/CY2024/pbp-benefits-2024-quarter-4.zip",25173343,9c7ef3f607a47781601c46995254805d
+"raw/pbp/CY2025/pbp-benefits-2025.zip",24709662,3a89922a8dbf0fd58f9fdef63151282a
+"raw/pbp/CY2026/pbp-benefits-2026.zip",22892140,cad229214d2a98e755424ad99069d79a
+"raw/pbp/CY2027/pbp-benefits-2027.zip",23373818,acd4e9b07731c7a44356aa208553a00d
+"raw/april enrollment/CPSC_Enrollment_2019_04/CPSC_Contract_Info_2019_04.csv",1194916,e383a2737e6af65043fa3716f19abb9a
+"raw/april enrollment/CPSC_Enrollment_2019_04/CPSC_Enrollment_Info_2019_04.csv",136096497,0068e7d3ede4c97841f3d231e112f992
+"raw/april enrollment/CPSC_Enrollment_2019_04/Read_Me_CPSC_Enrollment_2019.txt",4555,032b9007b891cfcf04188222e16f0db1
+"raw/april enrollment/CPSC_Enrollment_2020_04/CPSC_Contract_Info_2020_04.csv",1345685,a796b516480d1f1e25a31a6229e357be
+"raw/april enrollment/CPSC_Enrollment_2020_04/CPSC_Enrollment_Info_2020_04.csv",160983355,032e5a5cd5cd50b64ec0649e26c57bbc
+"raw/april enrollment/CPSC_Enrollment_2020_04/Read_Me_CPSC_Enrollment_2020.txt",4557,137d883adff69e92d3d6a4066bb03dce
+"raw/april enrollment/CPSC_Enrollment_2021_04/CPSC_Contract_Info_2021_04.csv",1462975,f2e073758bb08450747a51f1c0f2e9d4
+"raw/april enrollment/CPSC_Enrollment_2021_04/CPSC_Enrollment_Info_2021_04.csv",167985901,a5b56c4e07477fcfe0ee7ef59daf02ef
+"raw/april enrollment/CPSC_Enrollment_2021_04/Read_Me_CPSC_Enrollment_2021.txt",4646,208d2d94fb8a53e2fb3fe32e73975149
+"raw/april enrollment/CPSC_Enrollment_2022_04/CPSC_Contract_Info_2022_04.csv",1531609,baedd49da2e3415b0882e5205dd673eb
+"raw/april enrollment/CPSC_Enrollment_2022_04/CPSC_Enrollment_Info_2022_04.csv",178021327,bbd02fc1578558122dcc01a62f0e69d1
+"raw/april enrollment/CPSC_Enrollment_2022_04/Read_Me_CPSC_Enrollment_2022.txt",4646,208d2d94fb8a53e2fb3fe32e73975149
+"raw/april enrollment/CPSC_Enrollment_2023_04/CPSC_Contract_Info_2023_04.csv",1636861,e9976c1f30aea2f2348333175d812eb2
+"raw/april enrollment/CPSC_Enrollment_2023_04/CPSC_Enrollment_Info_2023_04.csv",185574303,133eea2ec035f1f83e279f6f0d3af6ee
+"raw/april enrollment/CPSC_Enrollment_2023_04/Read_Me_CPSC_Enrollment_2023.txt",4646,208d2d94fb8a53e2fb3fe32e73975149
+"raw/april enrollment/CPSC_Enrollment_2024_04/CPSC_Contract_Info_2024_04.csv",1617308,ba9f406f6c2e5430e74ae18e8d740515
+"raw/april enrollment/CPSC_Enrollment_2024_04/CPSC_Enrollment_Info_2024_04.csv",185849912,8d9a686957a82ab29066762a05f2253f
+"raw/april enrollment/CPSC_Enrollment_2024_04/Read_Me_CPSC_Enrollment_2024.txt",4648,dfde0598820e854bf4aaf18d78f96416
+"raw/april enrollment/CPSC_Enrollment_2025_04/CPSC_Contract_Info_2025_04.csv",1535161,596954c047c4c06a2fb4b824231b4798
+"raw/april enrollment/CPSC_Enrollment_2025_04/CPSC_Enrollment_Info_2025_04.csv",184060174,1ca49c74907618323ccf51bd3d41af64
+"raw/april enrollment/CPSC_Enrollment_2025_04/Read_Me_CPSC_Enrollment_2025.txt",4654,180dec716e4a481ab44d3ae2b5be0b52
+"raw/april enrollment/CPSC_Enrollment_2026_04/CPSC_Contract_Info_2026_04.csv",1478687,37af2751507285307986303528bd0bab
+"raw/april enrollment/CPSC_Enrollment_2026_04/CPSC_Enrollment_Info_2026_04.csv",169761461,e53b38833f31f0e1a649643f429772d6
+"raw/april enrollment/CPSC_Enrollment_2026_04/Read_Me_CPSC_Enrollment_2026.txt",4654,180dec716e4a481ab44d3ae2b5be0b52
+"raw/april enrollment/cpsc_enrollment_2019_04.zip",28692149,06be61a2bda23716cf9cfe66c5a7226e
+"raw/april enrollment/monthly-enrollment-cpsc-april-2020.zip",33958251,8dff84e3035f32e0ba275ecdce73cc8b
+"raw/april enrollment/monthly-enrollment-cpsc-april-2021.zip",35427475,20659d04c348184df2c13876cfa51c3c
+"raw/april enrollment/monthly-enrollment-cpsc-april-2022.zip",37498856,5023a3784aa6ad7c579774733904f888
+"raw/april enrollment/monthly-enrollment-cpsc-april-2023.zip",39043783,ddaf2d234abea3e6a6995ae5125b13c5
+"raw/april enrollment/monthly-enrollment-cpsc-april-2024.zip",39372394,26891f0fa1d130164ebb17a682702051
+"raw/april enrollment/monthly-enrollment-cpsc-april-2025.zip",38209704,ddf9c2e19f29664cb506b0cea5af8991
+"raw/april enrollment/monthly-enrollment-cpsc-april-2026.zip",36047619,000e4c6c244b5ad0c3fce352a30628c7
+"raw/february enrollment/CPSC_Enrollment_2019_02/CPSC_Contract_Info_2019_02.csv",1202776,1ebed86b4bc3b915d18a43b4691dd19f
+"raw/february enrollment/CPSC_Enrollment_2019_02/CPSC_Enrollment_Info_2019_02.csv",136195618,763995fdfe7505722575f7791ec0d88f
+"raw/february enrollment/CPSC_Enrollment_2019_02/Read_Me_CPSC_Enrollment_2019.txt",4555,032b9007b891cfcf04188222e16f0db1
+"raw/february enrollment/CPSC_Enrollment_2020_02/CPSC_Contract_Info_2020_02.csv",1348766,c6468d1daa9770d69251702727df9d27
+"raw/february enrollment/CPSC_Enrollment_2020_02/CPSC_Enrollment_Info_2020_02.csv",161018712,63da766ccfa1ee2882fcce187a389e18
+"raw/february enrollment/CPSC_Enrollment_2020_02/Read_Me_CPSC_Enrollment_2020.txt",4557,137d883adff69e92d3d6a4066bb03dce
+"raw/february enrollment/CPSC_Enrollment_2021_02/CPSC_Contract_Info_2021_02.csv",1462039,fa6869b469fe6ff9063f0cea13e6f361
+"raw/february enrollment/CPSC_Enrollment_2021_02/CPSC_Enrollment_Info_2021_02.csv",168452540,1cf7a5da2565a1b44c3ebc18ce4fc752
+"raw/february enrollment/CPSC_Enrollment_2021_02/Read_Me_CPSC_Enrollment_2021.txt",4646,208d2d94fb8a53e2fb3fe32e73975149
+"raw/february enrollment/CPSC_Enrollment_2022_02/CPSC_Contract_Info_2022_02.csv",1533110,9888803ddf0f11f12cfad25c8f18eb84
+"raw/february enrollment/CPSC_Enrollment_2022_02/CPSC_Enrollment_Info_2022_02.csv",178485473,37b332a7a148aa8ed481a1c6df66bb37
+"raw/february enrollment/CPSC_Enrollment_2022_02/Read_Me_CPSC_Enrollment_2022.txt",4646,208d2d94fb8a53e2fb3fe32e73975149
+"raw/february enrollment/CPSC_Enrollment_2023_02/CPSC_Contract_Info_2023_02.csv",1633353,2226c1bfebca740415da2c735f07de5d
+"raw/february enrollment/CPSC_Enrollment_2023_02/CPSC_Enrollment_Info_2023_02.csv",186196724,89475d49f1c1ad5808b137c059a8b46e
+"raw/february enrollment/CPSC_Enrollment_2023_02/Read_Me_CPSC_Enrollment_2023.txt",4961,05552d4836bdae675aad9eba4403fd08
+"raw/february enrollment/CPSC_Enrollment_2024_02/CPSC_Contract_Info_2024_02.csv",1616654,29d6b12d9bca13ec64c6f2b04cbf1287
+"raw/february enrollment/CPSC_Enrollment_2024_02/CPSC_Enrollment_Info_2024_02.csv",185984806,ac1aa023a2319898ff7519ef3d2cd5af
+"raw/february enrollment/CPSC_Enrollment_2024_02/Read_Me_CPSC_Enrollment_2024.txt",4648,dfde0598820e854bf4aaf18d78f96416
+"raw/february enrollment/CPSC_Enrollment_2025_02/CPSC_Contract_Info_2025_02.csv",1534608,a63ba04e29cbb2887e70d9d9a2fea4b0
+"raw/february enrollment/CPSC_Enrollment_2025_02/CPSC_Enrollment_Info_2025_02.csv",184334602,9554b826b1885a4d23a4a7fe4b0b5cb1
+"raw/february enrollment/CPSC_Enrollment_2025_02/Read_Me_CPSC_Enrollment_2025.txt",4654,180dec716e4a481ab44d3ae2b5be0b52
+"raw/february enrollment/CPSC_Enrollment_2026_02/CPSC_Contract_Info_2026_02.csv",1478084,6872b1f7dbb647c9789f41898a7a1683
+"raw/february enrollment/CPSC_Enrollment_2026_02/CPSC_Enrollment_Info_2026_02.csv",170141527,295e4c2737a25f41a9a161dd82098e5d
+"raw/february enrollment/CPSC_Enrollment_2026_02/Read_Me_CPSC_Enrollment_2026.txt",4654,180dec716e4a481ab44d3ae2b5be0b52
+"raw/february enrollment/cpsc_enrollment_2019_02.zip",28713361,b75aeb965ef46f8f23cc40e6f7b69684
+"raw/february enrollment/monthly-enrollment-cpsc-february-2020.zip",33970227,48932217d179dfea29804e3504b26f7c
+"raw/february enrollment/monthly-enrollment-cpsc-february-2021.zip",35514167,06ef468bc5725cb9ce6c1684f74a0582
+"raw/february enrollment/monthly-enrollment-cpsc-february-2022.zip",37589657,385993c411e2e5cb7e4fbf7586e577c9
+"raw/february enrollment/monthly-enrollment-cpsc-february-2023.zip",39164384,7bd4f183e00fe533e1e9ce031558b071
+"raw/february enrollment/monthly-enrollment-cpsc-february-2024.zip",39404422,06125f05d580294d203e2008251c5f7d
+"raw/february enrollment/monthly-enrollment-cpsc-february-2025.zip",38263718,e3bfb925b6d4f7656f4ca2463b69ad6c
+"raw/february enrollment/monthly-enrollment-cpsc-february-2026.zip",36128169,a18240db7136ae83812416f81766c421
+"raw/march enrollment/CPSC_Enrollment_2019_03/CPSC_Contract_Info_2019_03.csv",1198681,bf6c0a5378c1f84aa836789879f036a7
+"raw/march enrollment/CPSC_Enrollment_2019_03/CPSC_Enrollment_Info_2019_03.csv",136328682,bf815e43203110a3eed98b3cf68744c1
+"raw/march enrollment/CPSC_Enrollment_2019_03/Read_Me_CPSC_Enrollment_2019.txt",4555,032b9007b891cfcf04188222e16f0db1
+"raw/march enrollment/CPSC_Enrollment_2020_03/CPSC_Contract_Info_2020_03.csv",1345289,ee28bd149216d855e236aaf5a527aa66
+"raw/march enrollment/CPSC_Enrollment_2020_03/CPSC_Enrollment_Info_2020_03.csv",160730154,ca63d5b7614872a47ae05653533f1a04
+"raw/march enrollment/CPSC_Enrollment_2020_03/Read_Me_CPSC_Enrollment_2020.txt",4557,137d883adff69e92d3d6a4066bb03dce
+"raw/march enrollment/CPSC_Enrollment_2021_03/CPSC_Contract_Info_2021_03.csv",1461578,7a144175e784d0b09e2e9e50a264395e
+"raw/march enrollment/CPSC_Enrollment_2021_03/CPSC_Enrollment_Info_2021_03.csv",168125155,1a7a791a6faa6ce75652f71d20746a78
+"raw/march enrollment/CPSC_Enrollment_2021_03/Read_Me_CPSC_Enrollment_2021.txt",4646,208d2d94fb8a53e2fb3fe32e73975149
+"raw/march enrollment/CPSC_Enrollment_2022_03/CPSC_Contract_Info_2022_03.csv",1532368,75b79d7827aa006e34ab7a8269a68e60
+"raw/march enrollment/CPSC_Enrollment_2022_03/CPSC_Enrollment_Info_2022_03.csv",178264423,761de83064d4ed701382f7a3f0e4c8d4
+"raw/march enrollment/CPSC_Enrollment_2022_03/Read_Me_CPSC_Enrollment_2022.txt",4646,208d2d94fb8a53e2fb3fe32e73975149
+"raw/march enrollment/CPSC_Enrollment_2023_03/CPSC_Contract_Info_2023_03.csv",1633220,da0245e3567e4b0e856903113b40227d
+"raw/march enrollment/CPSC_Enrollment_2023_03/CPSC_Enrollment_Info_2023_03.csv",185851415,23396d0b5dda95fd1a155bc4e03fa5b2
+"raw/march enrollment/CPSC_Enrollment_2023_03/Read_Me_CPSC_Enrollment_2023.txt",4646,208d2d94fb8a53e2fb3fe32e73975149
+"raw/march enrollment/CPSC_Enrollment_2024_03/CPSC_Contract_Info_2024_03.csv",1616681,7f1447158cd0fbb6c1fc2782e9d8c66e
+"raw/march enrollment/CPSC_Enrollment_2024_03/CPSC_Enrollment_Info_2024_03.csv",185891579,042fef7b16fadf6f8e2e68d57bbb485d
+"raw/march enrollment/CPSC_Enrollment_2024_03/Read_Me_CPSC_Enrollment_2024.txt",4648,dfde0598820e854bf4aaf18d78f96416
+"raw/march enrollment/CPSC_Enrollment_2025_03/CPSC_Contract_Info_2025_03.csv",1534679,f6aa2fcefb9a51c8ac19b3ba964b968b
+"raw/march enrollment/CPSC_Enrollment_2025_03/CPSC_Enrollment_Info_2025_03.csv",184325232,a94f9eb9844d1a40a160d5f22f4d5826
+"raw/march enrollment/CPSC_Enrollment_2025_03/Read_Me_CPSC_Enrollment_2025.txt",4654,180dec716e4a481ab44d3ae2b5be0b52
+"raw/march enrollment/CPSC_Enrollment_2026_03/CPSC_Contract_Info_2026_03.csv",1477802,e170ef0864aa75fa22e89e9cc1fb51e4
+"raw/march enrollment/CPSC_Enrollment_2026_03/CPSC_Enrollment_Info_2026_03.csv",169898860,926fa17d1cb85dce35ca8d9ebac63fc3
+"raw/march enrollment/CPSC_Enrollment_2026_03/Read_Me_CPSC_Enrollment_2026.txt",4654,180dec716e4a481ab44d3ae2b5be0b52
+"raw/march enrollment/cpsc_enrollment_2019_03.zip",28735546,ae40be18931a3255f0da4f8427624ba9
+"raw/march enrollment/monthly-enrollment-cpsc-march-2020.zip",33910178,9a16626e7e02145a02da625ae1d459c8
+"raw/march enrollment/monthly-enrollment-cpsc-march-2021.zip",35456263,575f149b8b1e0981ced96b8db7265790
+"raw/march enrollment/monthly-enrollment-cpsc-march-2022.zip",37548644,bbb0bb8060b8b8b4de5938113ed53586
+"raw/march enrollment/monthly-enrollment-cpsc-march-2023.zip",39098254,3555ab0f26e6f139fa3ac72664210571
+"raw/march enrollment/monthly-enrollment-cpsc-march-2024.zip",39379739,d6a78c77a18de971d9a3b91fd7a5af9a
+"raw/march enrollment/monthly-enrollment-cpsc-march-2025.zip",38262985,e0051980442dd1c73715338d63f0d31e
+"raw/march enrollment/monthly-enrollment-cpsc-march-2026.zip",36075468,33149575d6568f8278d30b427c77a0c0

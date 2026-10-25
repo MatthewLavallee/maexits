@@ -21,6 +21,13 @@
 #' Suppressed CMS cells (1-10 enrollees) count as 10; `_low` columns count
 #' them as 1.
 #'
+#' @section Spring enrollment:
+#' The `feb`, `mar` and `apr` columns give the same January plans'
+#' enrollment in February, March and April of the January year, through
+#' the Medicare Advantage Open Enrollment Period (January-March, changes
+#' effective the first of the next month); April is the first month after
+#' it. They are NA for a transition until CMS posts that month.
+#'
 #' @eval .rd_format("county_panel")
 #' @seealso [maexits_data()], [maexits_catalog()], [plan_county]
 #' @name county_panel
@@ -51,6 +58,10 @@ NULL
 #' shared equally across the links). `forced_county` (with `forced_reason`)
 #' says whether a plan-county's enrollees were forced out; the link-level
 #' `forced` flags individual links.
+#'
+#' The `feb_`, `mar_` and `apr_` enrollment columns follow the January
+#' rules for February, March and April of the January year (NA until CMS
+#' posts the month), with the same `_once` and `_split` versions.
 #'
 #' The plan universe is individual-market Medicare Advantage plus special
 #' needs plans in the CMS landscape, on both the December and January side;
@@ -115,8 +126,16 @@ NULL
 #' `lost_coverage` equals `forced_county` in [plan_county], and the
 #' county totals equal the `_once` columns of [county_panel].
 #'
+#' @section Benchmarks after January:
+#' `successor_jan_enrollment` through `successor_apr_enrollment` give the
+#' enrollment of the plan's successor in the county in January-April of the
+#' January year, and `county_jan_enrollment` through
+#' `county_apr_enrollment` the county's MA enrollment in the January plans,
+#' to follow the county after the transition and the MA Open Enrollment
+#' Period. Months CMS has not posted are NA.
+#'
 #' @section Coverage gaps:
-#' Plan details come from [plan_details]. The landscape files give no
+#' Plan details come from [plan_info]. The landscape files give no
 #' out-of-pocket maximum for SNPs before CY2025 (`moop_in_network` NA),
 #' Part C and Part D star ratings start in CY2024 (plans with Part D only
 #' in CY2024), and D-SNP integration status starts in CY2023. The county
@@ -126,7 +145,7 @@ NULL
 #' listed service area (about 3-6% of CPSC December MA enrollment).
 #'
 #' @eval .rd_format("displacement")
-#' @seealso [maexits_data()], [plan_details], [county_panel]
+#' @seealso [maexits_data()], [plan_info], [county_panel]
 #' @name displacement
 #' @docType data
 #' @keywords datasets
@@ -139,9 +158,11 @@ NULL
 #' county) for every individual-market MA plan and SNP the December
 #' landscape and the crosswalk list, with whether CMS's crosswalk
 #' terminated the plan or cut the county from its service area for the
-#' next January (`exit_type`), and the plan-county's enrollment in
-#' December and in September of `dec_year`. Built by [make_exits()]. Load
-#' it with `maexits_data("exits")`.
+#' next January (`exit_type`), and the plan-county's December enrollment.
+#' It covers the transitions with December enrollment
+#' (`MAEXITS_XWALK_YEARS`); [exit_sept] gives the same plan-counties on
+#' September enrollment, including the newest transition. Built by
+#' [make_exits()]. Load it with `maexits_data("exits")`.
 #'
 #' @section Counting:
 #' Each plan-county appears once, so sums count every enrollee once. The
@@ -149,16 +170,6 @@ NULL
 #' county is
 #' `sum(dec_enrollment[exit_type != "none"]) / sum(dec_enrollment)`, and
 #' `exit_type` splits it into terminations and service-area reductions.
-#'
-#' @section December and September:
-#' December enrollment covers the transitions in `MAEXITS_XWALK_YEARS`.
-#' September covers `MAEXITS_EXITS_YEARS`, which adds the newest
-#' transition once its crosswalk is registered, two months before its
-#' December enrollment comes out: compare it with earlier years through
-#' `sep_enrollment`.
-#' September gives shares 0.01-0.28 points higher than December
-#' (2018-2025). The plan-counties and `exit_type` are the same for both
-#' months.
 #'
 #' @section What counts as an exit:
 #' `exit_type` uses only CMS's crosswalk labels, checked against the
@@ -172,8 +183,33 @@ NULL
 #' here they are `none`.
 #'
 #' @eval .rd_format("exits")
-#' @seealso [maexits_data()], [displacement], [plan_details]
+#' @seealso [maexits_data()], [exit_sept], [displacement], [plan_info]
 #' @name exits
+#' @docType data
+#' @keywords datasets
+NULL
+
+
+#' Plan exits on September enrollment, including the newest transition
+#'
+#' The plan-counties and `exit_type` of [exits], with the plan-county's
+#' enrollment in September of `dec_year` instead of December. It covers
+#' every transition in `MAEXITS_EXITS_YEARS`, which adds the newest one
+#' once its crosswalk is registered (early October), about two months
+#' before its December enrollment comes out. Use it to compare the newest
+#' transition with earlier years on the same basis. Built by
+#' [make_exit_sept()]. Load it with `maexits_data("exit_sept")`.
+#'
+#' @section Counting:
+#' Each plan-county appears once. The share of September enrollment in
+#' plans CMS terminated or cut from the county is
+#' `sum(sep_enrollment[exit_type != "none"]) / sum(sep_enrollment)`.
+#' September gives shares 0.01-0.28 points higher than December
+#' (2018-2025).
+#'
+#' @eval .rd_format("exit_sept")
+#' @seealso [maexits_data()], [exits]
+#' @name exit_sept
 #' @docType data
 #' @keywords datasets
 NULL
@@ -217,58 +253,44 @@ NULL
 #' cell counted as 10, about 1% with each counted as 1.
 #'
 #' @eval .rd_format("pdp_exits")
-#' @seealso [maexits_data()], [exits]
+#' @seealso [maexits_data()], [exits], [exit_sept]
 #' @name pdp_exits
 #' @docType data
 #' @keywords datasets
 NULL
 
 
-#' Plan details by contract year
+#' Plan characteristics and supplemental benefits by contract year
 #'
 #' One row per contract year, contract, plan and segment for the
 #' individual-market MA and SNP plans in the CMS landscape files, CY2018 on:
 #' organization and parent, plan type, premiums, Part D deductible and
 #' benefit type, in-network out-of-pocket maximum, star ratings and SNP
-#' details. Built by [make_plan_details()] from the landscape files, the
-#' Part D Plan and Premium reports (CY2018-CY2024) and CPSC Contract Info.
-#' Load it with `maexits_data("plan_details")`; join it to other tables on
-#' `year` (= `dec_year` for December plans), `contract_id`, `plan_id` and
+#' details, plus the Plan Benefit Package (PBP) benefits: whether the plan
+#' reduces enrollees' Part B premium (the "giveback") and by how much, and
+#' whether it covers dental, eye exams and eyewear, hearing exams and
+#' hearing aids, an over-the-counter (OTC) allowance (with its annual
+#' maximum), meals, transportation, worldwide emergency care, fitness,
+#' in-home support, and food and produce. Built by [make_plan_info()]. Load
+#' it with `maexits_data("plan_info")`; join it to other tables on `year`
+#' (= `dec_year` for December plans), `contract_id`, `plan_id` and
 #' `segment_id`. Money amounts are monthly dollars except deductibles and
 #' the out-of-pocket maximum (annual).
 #'
-#' @eval .rd_format("plan_details")
-#' @seealso [maexits_data()], [displacement]
-#' @name plan_details
-#' @docType data
-#' @keywords datasets
-NULL
-
-
-#' Plan service areas by contract year
+#' @section Sources:
+#' Plan details come from the landscape files, the Part D Plan and Premium
+#' reports (CY2018-CY2024) and CPSC Contract Info. Benefits come from the
+#' PBP Benefits files, one registered quarterly vintage a year
+#' (`MAEXITS_PBP_FILES`); a benefit flag is TRUE when the plan's bid answers
+#' "Yes" to covering it (for dental from CY2025, when any preventive (16b)
+#' or comprehensive (16c) dental service is a mandatory supplemental
+#' benefit). The OTC maximum is annualized from the plan's period; plans
+#' with no plan-level maximum have `NA`. The few plans without a PBP record
+#' (under 0.2% a year) have `NA` benefit columns.
 #'
-#' One row per plan segment and county in the CMS landscape files (CY2016
-#' on), individual-market MA plus SNPs. County names use the CMS enrollment
-#' spelling. Load it with `maexits_data("landscape")`.
-#'
-#' @eval .rd_format("landscape")
-#' @seealso [maexits_data()], [maexits_catalog()]
-#' @name landscape
-#' @docType data
-#' @keywords datasets
-NULL
-
-
-#' December and January plan x county enrollment used by the pipeline
-#'
-#' CMS Monthly Enrollment by Contract/Plan/State/County aggregated to plan
-#' and county, for the December and January files the pipeline uses. Load it
-#' with `maexits_data("enrollment")`; for any other month use
-#' [cms_enrollment()].
-#'
-#' @eval .rd_format("enrollment")
-#' @seealso [maexits_data()], [cms_enrollment()]
-#' @name enrollment
+#' @eval .rd_format("plan_info")
+#' @seealso [maexits_data()], [displacement], [exits]
+#' @name plan_info
 #' @docType data
 #' @keywords datasets
 NULL

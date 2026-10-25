@@ -3,10 +3,15 @@
 #
 # One row per December plan x county (dec_year): the exit CMS's crosswalk
 # gives the plan-county for the next January (terminated, service-area
-# reduction, or none) and its enrollment in December and in September.
-# September covers every registered crosswalk year, so the latest
-# transition, whose December enrollment comes out in mid-December, can be
-# compared with earlier years on the same footing.
+# reduction, or none).
+#   make_exits()       the transitions with December enrollment out
+#                      (MAEXITS_XWALK_YEARS), with December enrollment
+#   make_exit_sept()   every registered transition (MAEXITS_EXITS_YEARS),
+#                      with September enrollment, so the newest transition,
+#                      whose December enrollment comes out in mid-December,
+#                      can be compared with earlier years on the same footing
+# Both come from one build, which checks that the two months give the same
+# plan-counties and exit types.
 # ============================================================
 
 
@@ -65,39 +70,14 @@
 }
 
 
-#' Build the Exits Table
+#' Exits on December and September enrollment (internal)
 #'
-#' One row per December plan and county for each transition (`dec_year`):
-#' whether CMS's crosswalk terminated the plan or cut the county from its
-#' service area for the next January, with the plan-county's enrollment in
-#' December and in September of `dec_year`.
-#'
-#' `exit_type` uses CMS's crosswalk labels, checked against the January
-#' landscape:
-#' * `terminated`: every crosswalk link of the plan-county is a termination.
-#' * `service_area_reduction`: the plan renews with a service-area reduction
-#'   ("Renewal Plan with SAR"), and neither it nor any other plan the
-#'   crosswalk maps it to serves the county in January.
-#' * `none`: every other plan-county. This includes the plan-counties that
-#'   [displacement] counts as having lost coverage because CMS moved the
-#'   plan to one that does not serve the county, or renewed it without
-#'   listing it in the county in January.
-#'
-#' The September columns cover `MAEXITS_EXITS_YEARS`, which runs one year
-#' past `MAEXITS_XWALK_YEARS` once the newest crosswalk is out; the December
-#' columns cover `MAEXITS_XWALK_YEARS`. The plan-counties and their
-#' `exit_type` depend only on the crosswalk and landscape files, so they
-#' agree for the two months (checked).
-#'
-#' @param at Augmented analytic table on December enrollment
-#'   ([augment_analytic()] output); NULL reads
-#'   `trunk/derived/analytictable_augmented.csv`.
-#' @param proxy_at Augmented analytic table on September enrollment for
-#'   every year; NULL builds it from `raw/monthly enrollment/`.
-#' @param save If TRUE, write `trunk/derived/exits.csv`.
-#' @return The exits table (invisibly).
-#' @export
-make_exits <- function(at = NULL, proxy_at = NULL, save = TRUE) {
+#' One row per plan-county for every year of `proxy_at`, with exit_type,
+#' September enrollment and, for the years of `at`, December enrollment.
+#' Checks that December and September give the same plan-counties and exit
+#' types.
+#' @keywords internal
+.build_exits <- function(at = NULL, proxy_at = NULL) {
   if (is.null(at)) {
     at <- fread(here("trunk", "derived", "analytictable_augmented.csv"), na.strings = c("", "NA"))
   }
@@ -134,17 +114,79 @@ make_exits <- function(at = NULL, proxy_at = NULL, save = TRUE) {
     .vcheck(all(is.na(x) | x == round(x)), "exits: %s has non-integer values", v)
     set(out, j = v, value = as.integer(round(x)))
   }
-  setcolorder(out, c(key[1:3], "segment_id", key[4:5], "fips", "plan_type", "snp", "snp_type",
-                     "exit_type", "xwalk_statuses", "dec_enrollment", "dec_enrollment_low",
-                     "dec_src", "sep_enrollment", "sep_enrollment_low", "sep_src"))
   setorderv(out, key)
   .vcheck(!anyDuplicated(out, by = key), "exits has duplicate plan-county rows")
   .vcheck(all(out$exit_type %in% .EXIT_TYPES), "exits: unexpected exit_type values")
+  attr(out, "dec_years") <- sort(unique(dec$dec_year))
+  out
+}
 
+.EXIT_FRONT <- c("dec_year", "contract_id", "plan_id", "segment_id", "county_name", "state_name",
+                 "fips", "plan_type", "snp", "snp_type", "exit_type", "xwalk_statuses")
+
+
+#' Build the Exits Table
+#'
+#' One row per December plan and county for each transition (`dec_year`)
+#' whose December enrollment is out (`MAEXITS_XWALK_YEARS`): whether CMS's
+#' crosswalk terminated the plan or cut the county from its service area for
+#' the next January, with the plan-county's December enrollment. For the
+#' same table on September enrollment, which also covers the newest
+#' transition, see [make_exit_sept()].
+#'
+#' `exit_type` uses CMS's crosswalk labels, checked against the January
+#' landscape:
+#' * `terminated`: every crosswalk link of the plan-county is a termination.
+#' * `service_area_reduction`: the plan renews with a service-area reduction
+#'   ("Renewal Plan with SAR"), and neither it nor any other plan the
+#'   crosswalk maps it to serves the county in January.
+#' * `none`: every other plan-county. This includes the plan-counties that
+#'   [displacement] counts as having lost coverage because CMS moved the
+#'   plan to one that does not serve the county, or renewed it without
+#'   listing it in the county in January.
+#'
+#' @param at Augmented analytic table on December enrollment
+#'   ([augment_analytic()] output); NULL reads
+#'   `trunk/derived/analytictable_augmented.csv`.
+#' @param proxy_at Augmented analytic table on September enrollment for
+#'   every year; NULL builds it from `raw/monthly enrollment/`.
+#' @param save If TRUE, write `trunk/derived/exits.csv`.
+#' @param both Optional output of the internal exits build, so the pipeline
+#'   builds it once for both tables.
+#' @return The exits table (invisibly).
+#' @export
+make_exits <- function(at = NULL, proxy_at = NULL, save = TRUE, both = NULL) {
+  if (is.null(both)) both <- .build_exits(at, proxy_at)
+  out <- both[dec_year %in% attr(both, "dec_years")]
+  out <- out[, c(.EXIT_FRONT, "dec_enrollment", "dec_enrollment_low", "dec_src"), with = FALSE]
+  .vcheck(!anyNA(out$dec_src), "exits: %d plan-counties of a December year have no December enrollment",
+          sum(is.na(out$dec_src)))
   yrs <- range(out$dec_year)
-  message(sprintf("Exits: %d plan-counties, dec_year %d-%d (December through %s)",
-                  nrow(out), yrs[1], yrs[2],
-                  if (nrow(dec)) max(dec$dec_year) else "none"))
+  message(sprintf("Exits: %d plan-counties, dec_year %d-%d (December enrollment)", nrow(out), yrs[1], yrs[2]))
   if (save) fwrite(out, here("trunk", "derived", "exits.csv"))
+  invisible(out)
+}
+
+
+#' Build the September Exits Table
+#'
+#' The exits table on September enrollment: one row per plan and county for
+#' every registered transition (`MAEXITS_EXITS_YEARS`), with the same
+#' plan-counties and `exit_type` as [make_exits()] and the plan-county's
+#' enrollment in September of `dec_year`. September CPSC enrollment is posted
+#' in mid-September, before the crosswalk (about October 1), so the newest
+#' transition can be measured months before its December enrollment is out,
+#' and compared with earlier years on the same footing.
+#'
+#' @inheritParams make_exits
+#' @param save If TRUE, write `trunk/derived/exit_sept.csv`.
+#' @return The September exits table (invisibly).
+#' @export
+make_exit_sept <- function(at = NULL, proxy_at = NULL, save = TRUE, both = NULL) {
+  if (is.null(both)) both <- .build_exits(at, proxy_at)
+  out <- both[, c(.EXIT_FRONT, "sep_enrollment", "sep_enrollment_low", "sep_src"), with = FALSE]
+  yrs <- range(out$dec_year)
+  message(sprintf("Exits (September): %d plan-counties, dec_year %d-%d", nrow(out), yrs[1], yrs[2]))
+  if (save) fwrite(out, here("trunk", "derived", "exit_sept.csv"))
   invisible(out)
 }

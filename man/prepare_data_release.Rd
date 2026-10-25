@@ -23,12 +23,13 @@ Invisibly, the manifest as a data.frame.
 \description{
 Maintainer tool. Reads the derived tables in \code{derived_dir} and writes, to
 \code{out_dir}, the compressed files that \code{\link[=maexits_data]{maexits_data()}} downloads
-(\code{county_panel.rds}, \code{plan_county.rds}, \code{displacement.rds}, \code{exits.rds}, \code{pdp_exits.rds},
-\code{plan_details.rds}, \code{landscape.rds}, \code{enrollment.rds}) and a
-\code{manifest.csv} with row counts and md5
-checksums. It adds a \code{plan_key} column ("H1234-001") to the plan-level
-tables and a \code{fips} column to the landscape and enrollment tables. Values
-are otherwise unchanged. Needs \verb{raw/} for the FIPS lookup.
+(\code{county_panel.rds}, \code{plan_county.rds}, \code{displacement.rds}, \code{exits.rds},
+\code{exit_sept.rds}, \code{pdp_exits.rds}, \code{plan_info.rds}) and a \code{manifest.csv}
+with row counts and md5 checksums. It adds a \code{plan_key} column
+("H1234-001") to the plan-level tables. Values are otherwise unchanged.
+The other derived tables (landscape, enrollment, Medicare enrollment,
+plan details, PBP benefits) stay in \code{trunk/derived} and are not released
+separately.
 }
 \details{
 Upload every file in \code{out_dir} to a GitHub release named \code{release}, and

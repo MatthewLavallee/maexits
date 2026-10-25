@@ -4,7 +4,7 @@
 \alias{make_exits}
 \title{Build the Exits Table}
 \usage{
-make_exits(at = NULL, proxy_at = NULL, save = TRUE)
+make_exits(at = NULL, proxy_at = NULL, save = TRUE, both = NULL)
 }
 \arguments{
 \item{at}{Augmented analytic table on December enrollment
@@ -15,15 +15,20 @@ make_exits(at = NULL, proxy_at = NULL, save = TRUE)
 every year; NULL builds it from \verb{raw/monthly enrollment/}.}
 
 \item{save}{If TRUE, write \code{trunk/derived/exits.csv}.}
+
+\item{both}{Optional output of the internal exits build, so the pipeline
+builds it once for both tables.}
 }
 \value{
 The exits table (invisibly).
 }
 \description{
-One row per December plan and county for each transition (\code{dec_year}):
-whether CMS's crosswalk terminated the plan or cut the county from its
-service area for the next January, with the plan-county's enrollment in
-December and in September of \code{dec_year}.
+One row per December plan and county for each transition (\code{dec_year})
+whose December enrollment is out (\code{MAEXITS_XWALK_YEARS}): whether CMS's
+crosswalk terminated the plan or cut the county from its service area for
+the next January, with the plan-county's December enrollment. For the
+same table on September enrollment, which also covers the newest
+transition, see \code{\link[=make_exit_sept]{make_exit_sept()}}.
 }
 \details{
 \code{exit_type} uses CMS's crosswalk labels, checked against the January
@@ -38,10 +43,4 @@ crosswalk maps it to serves the county in January.
 plan to one that does not serve the county, or renewed it without
 listing it in the county in January.
 }
-
-The September columns cover \code{MAEXITS_EXITS_YEARS}, which runs one year
-past \code{MAEXITS_XWALK_YEARS} once the newest crosswalk is out; the December
-columns cover \code{MAEXITS_XWALK_YEARS}. The plan-counties and their
-\code{exit_type} depend only on the crosswalk and landscape files, so they
-agree for the two months (checked).
 }

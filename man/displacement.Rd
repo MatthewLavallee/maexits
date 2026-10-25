@@ -50,6 +50,14 @@ A data.table with these columns:
 \item \code{county_dec_enrollment}: December enrollment of all plans in the county (equals county_panel total_dec_enrollment_once). \emph{Counting:} County-level: repeats on every plan row of the county and dec_year, so do not sum it across rows; take one row per county.
 \item \code{county_lost_enrollment}: December enrollment in the county that lost coverage (equals county_panel displaced_enrollment_once). \emph{Counting:} County-level: repeats on every plan row of the county and dec_year, so do not sum it across rows; take one row per county.
 \item \code{county_lost_share}: county_lost_enrollment / county_dec_enrollment. \emph{Counting:} County-level: repeats on every plan row of the county and dec_year, so do not sum it across rows; take one row per county.
+\item \code{successor_jan_enrollment}: January enrollment of the successor plan (successor_plan_key) in the county; NA when coverage was lost or the month is not yet posted. The successor's whole county enrollment, including enrollees from other plans consolidated into it.
+\item \code{successor_feb_enrollment}: February enrollment of the successor plan (successor_plan_key) in the county; NA when coverage was lost or the month is not yet posted. The successor's whole county enrollment, including enrollees from other plans consolidated into it.
+\item \code{successor_mar_enrollment}: March enrollment of the successor plan (successor_plan_key) in the county; NA when coverage was lost or the month is not yet posted. The successor's whole county enrollment, including enrollees from other plans consolidated into it.
+\item \code{successor_apr_enrollment}: April enrollment of the successor plan (successor_plan_key) in the county; NA when coverage was lost or the month is not yet posted. The successor's whole county enrollment, including enrollees from other plans consolidated into it.
+\item \code{county_jan_enrollment}: January MA enrollment of the January plans in the county, each successor plan-county once (equals county_panel total_jan_enrollment_once); NA until posted. \emph{Counting:} County-level: repeats on every plan row of the county and dec_year, so do not sum it across rows; take one row per county.
+\item \code{county_feb_enrollment}: February MA enrollment of the January plans in the county, each successor plan-county once (equals county_panel total_feb_enrollment_once); NA until posted. \emph{Counting:} County-level: repeats on every plan row of the county and dec_year, so do not sum it across rows; take one row per county.
+\item \code{county_mar_enrollment}: March MA enrollment of the January plans in the county, each successor plan-county once (equals county_panel total_mar_enrollment_once); NA until posted. \emph{Counting:} County-level: repeats on every plan row of the county and dec_year, so do not sum it across rows; take one row per county.
+\item \code{county_apr_enrollment}: April MA enrollment of the January plans in the county, each successor plan-county once (equals county_panel total_apr_enrollment_once); NA until posted. \emph{Counting:} County-level: repeats on every plan row of the county and dec_year, so do not sum it across rows; take one row per county.
 \item \code{penetration_2018}: 2018 MA penetration rate in the county. \emph{Counting:} County-level: repeats on every plan row of the county and dec_year, so do not sum it across rows; take one row per county.
 \item \code{eligibles_2018}: 2018 Medicare eligibles in the county. \emph{Counting:} County-level: repeats on every plan row of the county and dec_year, so do not sum it across rows; take one row per county.
 \item \code{enrolled_2018}: 2018 MA enrollees in the county. \emph{Counting:} County-level: repeats on every plan row of the county and dec_year, so do not sum it across rows; take one row per county.
@@ -142,9 +150,19 @@ needed.
 county totals equal the \verb{_once} columns of \link{county_panel}.
 }
 
+\section{Benchmarks after January}{
+
+\code{successor_jan_enrollment} through \code{successor_apr_enrollment} give the
+enrollment of the plan's successor in the county in January-April of the
+January year, and \code{county_jan_enrollment} through
+\code{county_apr_enrollment} the county's MA enrollment in the January plans,
+to follow the county after the transition and the MA Open Enrollment
+Period. Months CMS has not posted are NA.
+}
+
 \section{Coverage gaps}{
 
-Plan details come from \link{plan_details}. The landscape files give no
+Plan details come from \link{plan_info}. The landscape files give no
 out-of-pocket maximum for SNPs before CY2025 (\code{moop_in_network} NA),
 Part C and Part D star ratings start in CY2024 (plans with Part D only
 in CY2024), and D-SNP integration status starts in CY2023. The county
@@ -155,6 +173,6 @@ listed service area (about 3-6\% of CPSC December MA enrollment).
 }
 
 \seealso{
-\code{\link[=maexits_data]{maexits_data()}}, \link{plan_details}, \link{county_panel}
+\code{\link[=maexits_data]{maexits_data()}}, \link{plan_info}, \link{county_panel}
 }
 \keyword{datasets}

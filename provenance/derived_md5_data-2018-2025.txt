@@ -1,11 +1,18 @@
-# Derived tables of data release data-2018-2025, reproduced byte-for-byte from raw/ with zero warnings, 2026-09-25
-05314041e6c67b33d61a47eaf74f0dff trunk/derived/analytictable.csv
-87b02e0e0c48ba9c6a20cde668e7d2f6 trunk/derived/analytictable_augmented.csv
-b6482cd7b595a225e62b6a47efb3c3cf trunk/derived/county_panel.csv
+# Derived tables of the 2018-2025 build (crosswalk years 2019-2026, exits 2019-2027, February-April enrollment), reproduced byte-for-byte from raw/ with zero warnings, 2026-10-25
+f380282ab450d6bf629007856cf26b91 trunk/derived/analytictable.csv
+108516f5370e439d585b9d05d7f59372 trunk/derived/analytictable_augmented.csv
+65ad8ff84b5971c49b49c95b1c1822cd trunk/derived/county_panel.csv
 e679fcfaa7e4b97a9d846f63492fe780 trunk/derived/december_enrollment.csv
 276297fde14be367f32554ca7473b5d8 trunk/derived/january_enrollment.csv
+7ddad5e018ae643440f810c8fa88f9f0 trunk/derived/february_enrollment.csv
+3edb7c14307ae5daed57120395e53188 trunk/derived/march_enrollment.csv
+d9f33ac15615ba669e0adb794ca055ce trunk/derived/april_enrollment.csv
 85b9da944a240f96f452f7d2f2cf4e64 trunk/derived/landscape.csv
-da3433529bed7597a749d553dc35c7a6 trunk/derived/displacement.csv
+15aed0783054ae38c4098fe0b04499cc trunk/derived/displacement.csv
 6d7865c5762f193f05a65de35f6d9a2b trunk/derived/plan_details.csv
-0a0b4cb6294cd81faf67428351386dd4 trunk/derived/exits.csv
+00cbf4d04c387c55a6caab288b297fa0 trunk/derived/exits.csv
+4da3d9ecd6ee86821fb670c03d19af5f trunk/derived/exit_sept.csv
 51f643c8b4f7e5fc7a325578afff7506 trunk/derived/pdp_exits.csv
+1a9566a290ada105ee542f45cc207486 trunk/derived/medicare_enrollment.csv
+4344ad15b87c25a96136b110557a880e trunk/derived/pbp_benefits.csv
+bedf75d54d97051a06bf519a68b0d08e trunk/derived/plan_info.csv

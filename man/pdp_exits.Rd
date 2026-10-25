@@ -69,6 +69,6 @@ cell counted as 10, about 1\% with each counted as 1.
 }
 
 \seealso{
-\code{\link[=maexits_data]{maexits_data()}}, \link{exits}
+\code{\link[=maexits_data]{maexits_data()}}, \link{exits}, \link{exit_sept}
 }
 \keyword{datasets}

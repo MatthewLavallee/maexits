@@ -10,7 +10,8 @@ make_analytic(
   jan_enrollment = NULL,
   save = TRUE,
   xwalk_years = MAEXITS_XWALK_YEARS,
-  preliminary = FALSE
+  preliminary = FALSE,
+  spring_enrollment = NULL
 )
 }
 \arguments{
@@ -34,6 +35,12 @@ January N.}
 \code{jan_enrollment} is NA and the January-only rows (SAE expansion
 counties, new plans) are omitted. Exit measures need only the
 pre-exit month. Used by \code{run_preliminary()}.}
+
+\item{spring_enrollment}{Named list (\code{feb}, \code{mar}, \code{apr})
+of enrollment tables for the months after January, or NULL to read
+\code{trunk/derived/<month>_enrollment.csv} where present. Each is
+attached to the successor plan-county like January; a month not yet
+posted is NA.}
 }
 \value{
 Invisibly returns the analytic data.table with columns:

@@ -19,40 +19,35 @@
   county_panel = list(
     file = "county_panel.rds", year_col = "dec_year", plans = FALSE, months = FALSE,
     keys = c("county_name", "state_name", "fips", "dec_year"),
-    title = "County x transition year (December dec_year -> January dec_year + 1)"),
+    title = "County x transition year (December dec_year -> January dec_year + 1, and February-April)"),
   plan_county = list(
     file = "plan_county.rds", year_col = "dec_year", plans = TRUE, months = FALSE,
     keys = c("dec_year", "contract_id", "plan_id", "plan_key", "segment_id",
              "county_name", "state_name", "fips"),
-    title = "Plan x county x transition year: crosswalk status, enrollment, forced exits"),
-  landscape = list(
-    file = "landscape.rds", year_col = "year", plans = TRUE, months = FALSE,
-    keys = c("year", "contract_id", "plan_id", "plan_key", "segment_id",
-             "county_name", "state_name", "fips"),
-    title = "Plan service areas by contract year (CY2016 on)"),
-  enrollment = list(
-    file = "enrollment.rds", year_col = "year", plans = TRUE, months = TRUE,
-    keys = c("month", "contract_id", "plan_id", "plan_key", "county_name",
-             "state_name", "fips"),
-    title = "December and January plan x county enrollment as used by the pipeline"),
+    title = "Plan x county x transition year: crosswalk status, December-April enrollment, forced exits"),
   displacement = list(
     file = "displacement.rds", year_col = "dec_year", plans = TRUE, months = FALSE,
     keys = c("dec_year", "contract_id", "plan_id", "plan_key", "segment_id",
              "county_name", "state_name", "fips"),
-    title = "December plan x county: outcome in January, lost coverage, plan details"),
+    title = "December plan x county: outcome in January, lost coverage, January-April benchmarks, plan details"),
   exits = list(
     file = "exits.rds", year_col = "dec_year", plans = TRUE, months = FALSE,
     keys = c("dec_year", "contract_id", "plan_id", "plan_key", "segment_id",
              "county_name", "state_name", "fips"),
-    title = "December plan x county: terminated or service-area reduction, December and September enrollment"),
+    title = "December plan x county: terminated or service-area reduction, December enrollment"),
+  exit_sept = list(
+    file = "exit_sept.rds", year_col = "dec_year", plans = TRUE, months = FALSE,
+    keys = c("dec_year", "contract_id", "plan_id", "plan_key", "segment_id",
+             "county_name", "state_name", "fips"),
+    title = "Plan x county: terminated or service-area reduction, September enrollment (every transition incl. the newest)"),
   pdp_exits = list(
     file = "pdp_exits.rds", year_col = "dec_year", plans = TRUE, months = FALSE, geo = "state",
     keys = c("dec_year", "contract_id", "plan_id", "plan_key", "state", "state_name"),
     title = "December standalone Part D plan x state: terminated, December and September enrollment"),
-  plan_details = list(
-    file = "plan_details.rds", year_col = "year", plans = TRUE, months = FALSE, geo = FALSE,
+  plan_info = list(
+    file = "plan_info.rds", year_col = "year", plans = TRUE, months = FALSE, geo = FALSE,
     keys = c("year", "contract_id", "plan_id", "plan_key", "segment_id"),
-    title = "Plan x segment x contract year: organization, premiums, MOOP, stars, SNP details")
+    title = "Plan x segment x contract year: organization, premiums, MOOP, stars, SNP details, Part B giveback, supplemental benefits")
 )
 
 .CMS_KEYS <- c("month", "contract_id", "plan_id", "plan_key", "state", "county", "fips")
@@ -71,39 +66,43 @@
 #' Load a Processed Dataset
 #'
 #' Loads one of the pipeline's processed tables and keeps only the plans,
-#' years or months, states, counties and variables asked for. The table is
+#' years, states, counties and variables asked for. The table is
 #' downloaded once from the package's GitHub data release (a few MB to
 #' about 30 MB) and cached in [maexits_cache_dir()].
 #'
 #' Datasets (each has a help page listing every variable, e.g.
 #' `?plan_county`; [maexits_catalog()] has the same list as a table):
 #' * `"county_panel"` ([county_panel]): county x transition year. Exit rate,
-#'   displaced enrollment, December and January enrollment, 2018
-#'   penetration, benchmark.
+#'   displaced enrollment, December and January enrollment, February-April
+#'   enrollment of the January plans, 2018 penetration, benchmark.
 #' * `"plan_county"` ([plan_county]): plan x county x transition year, one
-#'   row per crosswalk link. Crosswalk status, December and January
-#'   enrollment, forced-exit flags, role.
+#'   row per crosswalk link. Crosswalk status, December enrollment, January
+#'   to April enrollment of the successor plan in the county, forced-exit
+#'   flags, role.
 #' * `"displacement"` ([displacement]): one row per December plan x county,
 #'   with its December enrollment, what happened to it in January
 #'   (`outcome`, `lost_coverage`), how far the exit reached, the county's
-#'   plans next January, and the plan's details. Built for counting who
-#'   lost their plan; each plan-county appears once.
+#'   plans next January, January-April enrollment of the successor plan
+#'   and of the county, and the plan's details. Built for counting who lost
+#'   their plan; each plan-county appears once.
 #' * `"exits"` ([exits]): one row per December plan x county, with whether
 #'   CMS terminated the plan or cut the county from its service area the
-#'   next January, and its December and September enrollment. September
-#'   covers the newest transition before its December file is out.
+#'   next January, and its December enrollment; transitions whose December
+#'   enrollment is out.
+#' * `"exit_sept"` ([exit_sept]): the same plan-counties and exit types on
+#'   September enrollment, for every transition including the newest, whose
+#'   December enrollment is not out yet.
 #' * `"pdp_exits"` ([pdp_exits]): one row per December standalone Part D
 #'   plan (PDP) x state, with whether CMS terminated it the next January,
 #'   and its December and September enrollment. Filter it by `states`, not
 #'   `counties`.
-#' * `"plan_details"` ([plan_details]): plan x segment x contract year:
+#' * `"plan_info"` ([plan_info]): plan x segment x contract year:
 #'   organization and parent, premiums, deductible, out-of-pocket maximum,
-#'   star ratings, SNP details.
-#' * `"landscape"` ([landscape]): plan service areas by contract year, with
-#'   plan type, SNP type and D-SNP integration status.
-#' * `"enrollment"` ([enrollment]): the December and January plan x county
-#'   enrollment the pipeline uses (December 2018-2025, January 2018-2026).
-#'   For other months use [cms_enrollment()].
+#'   star ratings, SNP details, Part B premium reduction ("giveback") and
+#'   supplemental benefits.
+#'
+#' Any month of CMS plan-county enrollment is available from
+#' [cms_enrollment()].
 #'
 #' A transition is indexed by its December year: `dec_year` 2025 is the
 #' December 2025 to January 2026 transition.
@@ -115,13 +114,12 @@
 #' [plan_county]).
 #'
 #' @param dataset One of `"county_panel"`, `"plan_county"`, `"displacement"`,
-#'   `"exits"`, `"pdp_exits"`, `"plan_details"`, `"landscape"`, `"enrollment"`.
+#'   `"exits"`, `"exit_sept"`, `"pdp_exits"`, `"plan_info"`.
 #' @param plans Plans to keep: `"H1234-001"` for one plan, `"H1234"` for
 #'   every plan in a contract. Not available for the county panel.
 #' @param years Years to keep: `dec_year` for `county_panel`,
-#'   `plan_county`, `displacement`, `exits` and `pdp_exits`, contract year for `plan_details` and
-#'   `landscape`, calendar year for `enrollment`.
-#' @param months `enrollment` only: months as `"YYYY-MM"` strings or Dates.
+#'   `plan_county`, `displacement`, `exits`, `exit_sept` and `pdp_exits`;
+#'   contract year for `plan_info`.
 #' @param states State names or postal abbreviations (`"MD"`, `"Maryland"`).
 #' @param counties County FIPS codes (`24005` or `"24005"`) or county names
 #'   (exact match, not case-sensitive; combine with `states` to
@@ -144,22 +142,19 @@
 #' maexits_data("plan_county", plans = c("H2001", "H3447-020"), years = 2025,
 #'              variables = c("status", "forced_county", "dec_enrollment_once"))
 #'
-#' # December 2025 enrollment for one county
-#' maexits_data("enrollment", months = "2025-12", counties = 24005)
+#' # The newest transition on September enrollment
+#' maexits_data("exit_sept", years = 2026, states = "VT")
 #' }
 #' @export
 maexits_data <- function(dataset = c("county_panel", "plan_county", "displacement", "exits",
-                                     "pdp_exits", "plan_details", "landscape", "enrollment"),
-                         plans = NULL, years = NULL, months = NULL, states = NULL,
+                                     "exit_sept", "pdp_exits", "plan_info"),
+                         plans = NULL, years = NULL, states = NULL,
                          counties = NULL, variables = NULL,
                          release = MAEXITS_DATA_RELEASE, refresh = FALSE) {
   dataset <- match.arg(dataset)
   spec <- .DATASETS[[dataset]]
   if (!is.null(plans) && !spec$plans) {
     .api_stop("%s is county-level and has no plans; use plan_county for plan-level data", dataset)
-  }
-  if (!is.null(months) && !spec$months) {
-    .api_stop("months applies to the enrollment dataset and cms_enrollment(); use years for %s", dataset)
   }
   if (identical(spec$geo, "state") && !is.null(counties)) {
     .api_stop("%s is by plan and state (PDPs are offered state-wide); filter it by states", dataset)
@@ -170,7 +165,7 @@ maexits_data <- function(dataset = c("county_panel", "plan_county", "displacemen
   }
   dt <- .load_release_table(dataset, release, refresh)
   dt <- .apply_filters(dt, plans = plans, years = years, year_col = spec$year_col,
-                       months = months, states = states, counties = counties,
+                       states = states, counties = counties,
                        county_col = "county_name")
   dt <- .select_variables(dt, variables, spec$keys, dataset)
   .note_counting(dataset, names(dt))

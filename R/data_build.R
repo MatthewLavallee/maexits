@@ -581,6 +581,44 @@ make_landscape <- function(save = TRUE, years = .landscape_years()) {
   dt
 }
 
+#' Attach February-April enrollment of the successor plan-county
+#'
+#' Each month in \code{MAEXITS_SPRING_MONTHS} is attached like January (same
+#' successor keys and counting rules). A month with no enrollment for the
+#' January year (not yet posted) gets NA values and source.
+#' @param spring Named list of enrollment tables (make_enrollment() output),
+#'   names as in \code{MAEXITS_SPRING_MONTHS}; NULL elements are absent months.
+#' @keywords internal
+.attach_spring <- function(dt, spring, by, jan_year) {
+  for (m in names(MAEXITS_SPRING_MONTHS)) {
+    e <- spring[[m]]
+    if (!is.null(e)) e <- e[year == as.character(jan_year)]
+    if (is.null(e) || !nrow(e)) {
+      dt[, (paste0(m, c("_enrollment", "_enrollment_low"))) := NA_real_]
+      dt[, (paste0(m, "_src")) := NA_character_]
+    } else {
+      dt <- .attach_enrollment(dt, e, by, m)
+    }
+  }
+  dt
+}
+
+#' Column names of the February-April enrollment columns
+#' @keywords internal
+.spring_cols <- function() {
+  as.vector(t(outer(names(MAEXITS_SPRING_MONTHS), c("_enrollment", "_enrollment_low", "_src"), paste0)))
+}
+
+#' Read the February-April enrollment tables written by the pipeline
+#' @keywords internal
+.load_spring <- function() {
+  out <- lapply(MAEXITS_SPRING_FOLDERS, function(f) {
+    p <- here("trunk", "derived", paste0(gsub(" ", "_", f), ".csv"))
+    if (file.exists(p)) fread(p) else NULL
+  })
+  setNames(out, names(MAEXITS_SPRING_MONTHS))
+}
+
 #' Build Core Analytic Table
 #'
 #' Links plan crosswalks, landscape data, and enrollment files across
@@ -599,6 +637,11 @@ make_landscape <- function(save = TRUE, years = .landscape_years()) {
 #' @param xwalk_years Integer vector of crosswalk years (default
 #'   \code{MAEXITS_XWALK_YEARS}). Crosswalk year N covers December N-1 to
 #'   January N.
+#' @param spring_enrollment Named list (\code{feb}, \code{mar}, \code{apr})
+#'   of enrollment tables for the months after January, or NULL to read
+#'   \code{trunk/derived/<month>_enrollment.csv} where present. Each is
+#'   attached to the successor plan-county like January; a month not yet
+#'   posted is NA.
 #' @param preliminary Logical. If TRUE, no January data is used:
 #'   \code{jan_enrollment} is NA and the January-only rows (SAE expansion
 #'   counties, new plans) are omitted. Exit measures need only the
@@ -610,7 +653,7 @@ make_landscape <- function(save = TRUE, years = .landscape_years()) {
 make_analytic <- function(landscape = NULL, dec_enrollment = NULL,
                           jan_enrollment = NULL, save = TRUE,
                           xwalk_years = MAEXITS_XWALK_YEARS,
-                          preliminary = FALSE) {
+                          preliminary = FALSE, spring_enrollment = NULL) {
   .vcheck(!(preliminary && save), paste0(
     "make_analytic(preliminary = TRUE) must not overwrite trunk/derived/",
     "analytictable.csv; use save = FALSE (run_preliminary() does)"))
@@ -623,6 +666,8 @@ make_analytic <- function(landscape = NULL, dec_enrollment = NULL,
   if (!preliminary) {
     dfe_jan <- .load_if_null(jan_enrollment, "trunk/derived/january_enrollment.csv")
     dfe_jan[, year := as.character(year)]
+    spring <- if (is.null(spring_enrollment)) .load_spring() else spring_enrollment
+    spring <- lapply(spring, function(e) if (is.null(e)) NULL else copy(as.data.table(e))[, year := as.character(year)])
   }
 
   # Stop before any imputation if a needed year is absent
@@ -635,8 +680,9 @@ make_analytic <- function(landscape = NULL, dec_enrollment = NULL,
   out_cols <- c("dec_year", "contract_id", "plan_id", "segment_id", "county_name",
                 "state_name", "status", "curr_contract_id", "curr_plan_id",
                 "dec_enrollment", "dec_enrollment_low", "dec_src",
-                "jan_enrollment", "jan_enrollment_low", "jan_src",
+                "jan_enrollment", "jan_enrollment_low", "jan_src", .spring_cols(),
                 "plan_type", "snp", "snp_type", "dsnp_integration")
+  month_labels <- c(feb = "February", mar = "March", apr = "April")
 
   dfh <- list()
 
@@ -669,6 +715,10 @@ make_analytic <- function(landscape = NULL, dec_enrollment = NULL,
     if (preliminary) {
       dfm[, c("jan_enrollment", "jan_enrollment_low") := NA_real_]
       dfm[, jan_src := NA_character_]
+      for (m in names(MAEXITS_SPRING_MONTHS)) {
+        dfm[, (paste0(m, c("_enrollment", "_enrollment_low"))) := NA_real_]
+        dfm[, (paste0(m, "_src")) := NA_character_]
+      }
     } else {
       # January enrollment of the successor plan in the same county
       dfm <- .attach_enrollment(dfm, enr_jan, c("curr_contract", "curr_plan"), "jan")
@@ -676,6 +726,15 @@ make_analytic <- function(landscape = NULL, dec_enrollment = NULL,
       # A terminated plan has no January enrollment
       dfm[status %in% term_statuses,
           `:=`(jan_enrollment = 0, jan_enrollment_low = 0, jan_src = "terminated")]
+      # The same successor plan-county in February-April (NA if not yet posted)
+      dfm <- .attach_spring(dfm, spring, c("curr_contract", "curr_plan"), jan_year)
+      for (m in names(MAEXITS_SPRING_MONTHS)) {
+        src <- paste0(m, "_src")
+        if (all(is.na(dfm[[src]]))) next
+        .check_imputation(dfm[!status %in% term_statuses][[src]], month_labels[[m]], xwalk_year)
+        dfm[status %in% term_statuses,
+            (c(paste0(m, c("_enrollment", "_enrollment_low")), src)) := list(0, 0, "terminated")]
+      }
     }
     dfm[status %in% term_statuses, `:=`(curr_contract = NA_character_, curr_plan = NA_real_)]
     setnames(dfm, c("curr_contract", "curr_plan"), c("curr_contract_id", "curr_plan_id"))
@@ -699,6 +758,7 @@ make_analytic <- function(landscape = NULL, dec_enrollment = NULL,
                   by.x = c("curr_contract", "curr_plan"),
                   by.y = c("contract_id", "plan_id"))
     newp <- .attach_enrollment(newp, enr_jan, c("curr_contract", "curr_plan"), "jan")
+    newp <- .attach_spring(newp, spring, c("curr_contract", "curr_plan"), jan_year)
     message(paste0("Crosswalk ", xwalk_year, ": ",
                    uniqueN(newp[, .(curr_contract, curr_plan)]),
                    " new plans in the January landscape"))
@@ -721,6 +781,7 @@ make_analytic <- function(landscape = NULL, dec_enrollment = NULL,
                        by.y = c("contract_id", "plan_id"))
     expansion <- expansion[!reached, on = .(curr_contract, curr_plan, county_name, state_name)]
     expansion <- .attach_enrollment(expansion, enr_jan, c("curr_contract", "curr_plan"), "jan")
+    expansion <- .attach_spring(expansion, spring, c("curr_contract", "curr_plan"), jan_year)
     dfexp_out <- expansion[, .(
       dec_year = dec_year, contract_id = curr_contract, plan_id = curr_plan,
       segment_id, county_name, state_name, status,
@@ -728,6 +789,7 @@ make_analytic <- function(landscape = NULL, dec_enrollment = NULL,
       dec_enrollment = NA_real_, dec_enrollment_low = NA_real_, dec_src = NA_character_,
       jan_enrollment, jan_enrollment_low, jan_src,
       plan_type, snp, snp_type, dsnp_integration)]
+    dfexp_out[, (.spring_cols()) := expansion[, .spring_cols(), with = FALSE]]
     message(paste0("Crosswalk ", xwalk_year, ": ", nrow(dfexp_out),
                    " January-only county-plan rows added for continuing plans"))
 
@@ -738,6 +800,7 @@ make_analytic <- function(landscape = NULL, dec_enrollment = NULL,
       dec_enrollment = NA_real_, dec_enrollment_low = NA_real_, dec_src = NA_character_,
       jan_enrollment, jan_enrollment_low, jan_src,
       plan_type, snp, snp_type, dsnp_integration)]
+    dfnew_out[, (.spring_cols()) := newp[, .spring_cols(), with = FALSE]]
 
     dfh[[length(dfh) + 1]] <- rbind(dfm_out, dfexp_out, dfnew_out, use.names = TRUE)
   }

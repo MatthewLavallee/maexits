@@ -1,6 +1,6 @@
 # Data Dictionary
 
-The package loads these tables with `maexits_data()`. Each has a help page listing every column (`?county_panel`, `?plan_county`, `?displacement`, `?exits`, `?pdp_exits`, `?plan_details`, `?landscape`, `?enrollment`), and `maexits_catalog()` returns the same list as a table. This file gives more detail on how each column is built. `plan_county` is `analytictable_augmented.csv` with `plan_key` and `curr_plan_key` added.
+The package loads these tables with `maexits_data()`. Each has a help page listing every column (`?county_panel`, `?plan_county`, `?displacement`, `?exits`, `?exit_sept`, `?pdp_exits`, `?plan_info`), and `maexits_catalog()` returns the same list as a table. This file gives more detail on how each column is built. `plan_county` is `analytictable_augmented.csv` with `plan_key` and `curr_plan_key` added.
 
 ## Rows are crosswalk links
 
@@ -76,6 +76,7 @@ New-plan and January-only rows have no December values (`dec_src` NA) and use th
 | `jan_first` | logical | TRUE on one link per successor plan-county. | |
 | `jan_enrollment_once` | numeric | `jan_enrollment` on the `jan_first` link, 0 on the other links to the same successor plan-county. | |
 | `jan_enrollment_split` | numeric | `jan_enrollment / curr_links`. | |
+| `feb_enrollment`, `mar_enrollment`, `apr_enrollment` (each with `_low`, `_src`, `_once`, `_split`) | numeric | The successor plan-county's February, March and April enrollment of the January year (`raw/february enrollment/` etc.), with the same rules, `_once` and `_split` as `jan_enrollment`; 0 on terminated links (`terminated`) and dropped counties (`dropped_county`). NA for a transition whose month CMS has not posted. | `make_analytic()`, `augment_analytic()`. |
 | `curr_is_incumbent` | logical | TRUE when a December plan in the county continues into this successor plan-county (some link to it is continuing and its successor serves the county). NA on terminated and dropped-county links. | |
 
 ## displacement.csv (`displacement`)
@@ -106,17 +107,21 @@ One row per December plan × county (`dec_year`, `contract_id`, `plan_id`, `coun
 
 **Scope and alternatives.** `plan_exits` (the plan left every county), `contract_exits` (the contract offers no plan in January), `contract_exits_county`, `parent_exits_county` (no plan of the same parent organization in the county in January; parents are matched on their December and January names from CPSC Contract Info), and counts of the county's plans next January (`n_plans_jan`: non-SNP, non-Cost plans; `n_plans_jan_other_parent`; `n_parents_jan`; `n_same_snp_type_jan` for SNPs). Plan-, contract- and county-level columns repeat on every row of their plan or county.
 
-## exits.csv (`exits`)
+**Benchmarks after January.** `successor_<m>_enrollment` (m = `jan`, `feb`, `mar`, `apr`) is the enrollment of the successor plan (`successor_plan_key`, the ranked link that sets the outcome) in the county that month, NA when coverage was lost or the month is not posted; it includes enrollees of other plans consolidated into the successor. `county_<m>_enrollment` is the county's enrollment in the January plans that month, each successor plan-county once (`county_panel`'s `total_<m>_enrollment_once`).
 
-One row per December plan × county (`dec_year`, `contract_id`, `plan_id`, `county_name`, `state_name`): the same plan-counties as `displacement` for the years it covers, plus the newest `dec_year` (`MAEXITS_EXITS_YEARS`) from its September table. Built by `make_exits()`. It answers "what share of MA enrollees were in a plan CMS terminated or cut from their county": `exit_type` is `terminated`, `service_area_reduction` or `none`, from CMS's crosswalk labels checked against the January landscape, and each plan-county appears once, so `sum(dec_enrollment[exit_type != "none"]) / sum(dec_enrollment)` is the share.
+## exits.csv (`exits`) and exit_sept.csv (`exit_sept`)
+
+One row per December plan × county (`dec_year`, `contract_id`, `plan_id`, `county_name`, `state_name`). Built from one shared table by `make_exits()` and `make_exit_sept()`. They answer "what share of MA enrollees were in a plan CMS terminated or cut from their county": `exit_type` is `terminated`, `service_area_reduction` or `none`, from CMS's crosswalk labels checked against the January landscape, and each plan-county appears once, so `sum(dec_enrollment[exit_type != "none"]) / sum(dec_enrollment)` is the share.
+
+- `exits` covers the transitions with December enrollment (`MAEXITS_XWALK_YEARS`), the same plan-counties as `displacement`, with `dec_enrollment`, `dec_enrollment_low` and `dec_src`.
+- `exit_sept` covers every year in `MAEXITS_EXITS_YEARS`, including the newest transition (from its September table), with `sep_enrollment`, `sep_enrollment_low` and `sep_src`: September of `dec_year` (`raw/monthly enrollment/`, `MAEXITS_EXITS_MONTH`), built as in `run_preliminary()`.
 
 | Column | Built from |
 |---|---|
 | `exit_type` | `forced_reason` of the plan-county (in `plan_county`, or the September table for the newest year): `service_area_reduction` as there; `terminated` when every crosswalk link is a termination (a plan mapped to a New Plan that does not serve the county is `none`); the other reasons (moved or consolidated into a plan that does not serve the county, renewal not listed in the county) and plan-counties that kept coverage are `none` |
-| `dec_enrollment`, `dec_enrollment_low`, `dec_src` | December enrollment, as in `displacement`; NA for a `dec_year` whose December file is not in the build yet |
-| `sep_enrollment`, `sep_enrollment_low`, `sep_src` | September enrollment of `dec_year` (`raw/monthly enrollment/`, `MAEXITS_EXITS_MONTH`), built as in `run_preliminary()` for every year in `MAEXITS_EXITS_YEARS` |
+| `dec_enrollment`, `sep_enrollment` (and `_low`, `_src`) | Plan-county enrollment, as in `displacement`: reported count, 10 per suppressed cell (`_low`: 1), 0 with no CMS record |
 
-September is there so the newest transition can be compared with earlier ones in October, two months before its December file: in 2018–2025 the September share is 0.01–0.28 points above the December one. The build checks that the two months give the same plan-counties and exit types.
+`exit_sept` lets the newest transition be compared with earlier ones in October, two months before its December file: in 2018–2025 the September share is 0.01–0.28 points above the December one. The build checks that the two months give the same plan-counties and exit types.
 
 ## pdp_exits.csv (`pdp_exits`)
 
@@ -129,7 +134,48 @@ One row per December standalone Part D plan (PDP) × state (`dec_year`, `contrac
 
 `MAEXITS_CMS_TERMINATED_CONTRACTS` holds S6946, Clear Spring Health's PDP contract: CMS terminated it for 2025 (notice of 13 October 2023), while the 2025 crosswalk lists 30 of its 33 plans as renewing and the CY2025 landscape no longer lists them.
 
-## plan_details.csv (`plan_details`)
+## medicare_enrollment.csv (pipeline only)
+
+Written to `trunk/derived/` by the pipeline; not loaded by `maexits_data()`.
+
+One row per county and month (`fips`, `month`), January 2018 on, built by `make_medicare_enrollment()` from CMS's Medicare Monthly Enrollment file (data.cms.gov; registered as `MAEXITS_MEDICARE_ENROLLMENT_FILE`). The CPSC-based tables count MA and Part D plan enrollment only; this table adds the rest of the county's Medicare population, so it gives MA penetration and Original Medicare enrollment around each January transition.
+
+| Column | Definition |
+|---|---|
+| `month`, `year` | Month (`"YYYY-MM"`) and calendar year. |
+| `state`, `state_name`, `county_name`, `fips` | CMS's state code and name, county name as CMS spells it in this file (e.g. "Addison County"), and county FIPS code. Join to other tables on `fips`. |
+| `total_benes` | Everyone enrolled in Medicare who lives in the county. |
+| `orig_medicare_benes` | Enrolled in Original (Traditional) Medicare. |
+| `ma_other_benes` | Enrolled in Medicare Advantage and other health plans: individual and employer MA, cost plans, PACE and Medicare-Medicaid Plans. `total_benes = orig_medicare_benes + ma_other_benes` (checked to within 1). |
+| `ma_share` | `ma_other_benes / total_benes`. |
+| `aged_benes`, `disabled_benes` | Entitled through age or disability. |
+| `dual_benes`, `full_dual_benes` | Dually eligible for Medicare and Medicaid (full and partial), and full-benefit duals. |
+| `part_d_benes`, `pdp_benes`, `mapd_benes` | Enrolled in Part D; in a standalone drug plan; in an MA plan with drug coverage. |
+
+CMS suppresses small counts (`*` in its file); they are `NA` here. Annual rows, state and national rows, and the "Unknown" county rows are dropped. The build stops if a month is missing or a county-month repeats. CMS reposts the full history each month, and the most recent months can be revised slightly in later postings.
+
+## pbp_benefits.csv (in `plan_info`)
+
+Written to `trunk/derived/` and joined onto `plan_details` to make `plan_info` (below).
+
+One row per contract year, contract, plan and segment (`year`, `contract_id`, `plan_id`, `segment_id`), CY2018 on, built by `make_pbp_benefits()` from CMS's Plan Benefit Package (PBP) Benefits files (one registered zip per year in `MAEXITS_PBP_FILES`, under `raw/pbp/`). The PBP files hold every benefit package CMS approved for the year, including standalone drug plans (all flags FALSE), employer plans and cost plans; `plan_info` keeps the individual MA plans of `plan_details`.
+
+| Column | Built from |
+|---|---|
+| `partb_giveback`, `partb_giveback_amt` | Section D: `pbp_d_mco_pay_reduct_yn` (plan uses MA rebates to reduce the Part B premium) and `pbp_d_mco_pay_reduct_amt` (monthly dollars; NA without a reduction). From CY2025 many plans report reductions under $5. |
+| `dental_preventive`, `dental_comprehensive` | To CY2024: `pbp_b16a_bendesc_yn` (preventive) and `pbp_b16b_bendesc_yn` (comprehensive). From CY2025 CMS moved preventive dental to 16b and comprehensive to 16c and replaced the Yes/No question with a mandatory/optional code per service (`pbp_b16b_bendesc_<service>_amo`, `pbp_b16c_bendesc_<service>_amo`); a flag is TRUE when any service in the group is mandatory (code 2 or 4). Optional supplemental dental alone is FALSE. |
+| `eye_exam`, `eyewear` | `pbp_b17a_bendesc_yn`, `pbp_b17b_bendesc_yn`. |
+| `hearing_exam`, `hearing_aids` | `pbp_b18a_bendesc_yn`, `pbp_b18b_bendesc_yn`. |
+| `otc`, `otc_annual_amt` | `pbp_b13b_bendesc_otc`; the annual maximum is `pbp_b13b_maxplan_amt` times the periods a year implied by `pbp_b13b_otc_maxplan_per` (every month, three months, six months, year, two years, three years). NA where the plan sets no plan-level maximum. |
+| `meals` | `pbp_b13c_bendesc_service`. |
+| `transportation` | `pbp_b10b_bendesc_yn`. |
+| `worldwide_emergency` | `pbp_b4c_bendesc_yn`. |
+| `fitness`, `in_home_support` | Other defined supplemental benefits (14c): `pbp_b14c_bendesc_yn` is Yes and `pbp_b14c_bendesc_ehc` lists 14c4 (fitness) or 14c21 (in-home support services; NA before CY2020). |
+| `food_produce` | `pbp_b13i_fd_bendesc_yn` in the SSBCI/VBID file (one row per package; TRUE if any package covers food and produce). NA before CY2020. |
+
+Yes/No answers are coded 1/2; a blank (question not reached) is No. The build stops on any other code, on a missing column, on duplicate plan-segments, or if a year has fewer than 3,000 plan-segments.
+
+## plan_details.csv (in `plan_info`)
 
 One row per contract year × contract × plan × segment, CY2018 on, built by `make_plan_details()` from the landscape files, the Part D Plan and Premium reports (CY2018–2024, `MAEXITS_PARTD_REPORT_FILES` in `R/config.R`) and CPSC Contract Info (December of the contract year, else January). `displacement` carries the same columns for each December plan. Coverage by year:
 
@@ -144,7 +190,11 @@ One row per contract year × contract × plan × segment, CY2018 on, built by `m
 | `snp_institutional_type`, `zero_dollar_dsnp` | CY2025 on | |
 | `gap_coverage` | to CY2024 | |
 
-Supplemental benefits (dental, vision, hearing, over-the-counter), the Part B premium reduction and copays are not in these files; they are in the CMS Plan Benefit Package data.
+Supplemental benefits (dental, vision, hearing, over-the-counter) and the Part B premium reduction are not in these files; they come from `pbp_benefits` (above).
+
+## plan_info.csv (`plan_info`)
+
+One row per row of `plan_details` (contract year × contract × plan × segment, individual MA plans and SNPs, CY2018 on), with the `pbp_benefits` columns joined on `year`, `contract_id`, `plan_id` and `segment_id`. Built by `make_plan_info()`. Plans without a PBP record have NA benefit columns; the build stops if they exceed 2% of a year's plans (about 0.1% in practice).
 
 ## county_panel.csv
 
@@ -173,6 +223,7 @@ One row per county and `dec_year`, built by `make_county_panel()` from the augme
 | `new_entrant_jan_once` | numeric | All other January enrollment, each plan-county once: new plans, counties a plan adds, and the few successors that report January enrollment in a county where the January landscape does not list them. |
 | `n_exiting_plans_county` | integer | Distinct plans with `forced_county`. |
 | `snp_dec_enrollment_once`, `snp_displaced_enrollment_once` | numeric | SNP December enrollment, and the part of it forced out. |
+| `total_<m>_enrollment_once`, `total_<m>_enrollment_once_low`, `incumbent_<m>_once`, `new_entrant_<m>_once` (m = `feb`, `mar`, `apr`) | numeric | As the January `_once` columns, for February, March and April of the January year. NA for a transition whose month CMS has not posted. |
 | `exit_rate_once`, `enrollment_change_once`, `incumbent_growth_once`, `exit_group_once` | | As the columns without `_once`, from the `_once` totals. |
 
 ## Caveats

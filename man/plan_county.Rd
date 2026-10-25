@@ -33,6 +33,21 @@ A data.table with these columns:
 \item \code{jan_first}: TRUE on the one row per successor plan-county that carries its January value in jan_enrollment_once.
 \item \code{jan_enrollment_once}: jan_enrollment on one row per successor plan-county, 0 on its other links.
 \item \code{jan_enrollment_split}: jan_enrollment divided equally across the successor plan-county's links.
+\item \code{feb_enrollment}: February enrollment of the successor plan in the county (same rules and plan-counties as jan_enrollment; 0 for terminated links and dropped counties). NA until the February file is posted. \emph{Counting:} Repeats on every link to the same successor plan-county (see \code{curr_links}). For totals that count each plan-county once, sum \code{jan_enrollment_once} or \code{jan_enrollment_split}.
+\item \code{feb_enrollment_low}: As feb_enrollment with suppressed cells as 1 (lower bound). \emph{Counting:} Repeats like jan_enrollment; for totals that count each successor plan-county once, sum it over rows with \code{jan_first} TRUE.
+\item \code{feb_src}: Source of feb_enrollment: reported, suppressed, mixed, no_record, terminated, or dropped_county; NA when not yet posted.
+\item \code{feb_enrollment_once}: feb_enrollment on one row per successor plan-county (the jan_first row), 0 on its other links.
+\item \code{feb_enrollment_split}: feb_enrollment divided equally across the successor plan-county's links.
+\item \code{mar_enrollment}: March enrollment of the successor plan in the county (same rules and plan-counties as jan_enrollment; 0 for terminated links and dropped counties). NA until the March file is posted. \emph{Counting:} Repeats on every link to the same successor plan-county (see \code{curr_links}). For totals that count each plan-county once, sum \code{jan_enrollment_once} or \code{jan_enrollment_split}.
+\item \code{mar_enrollment_low}: As mar_enrollment with suppressed cells as 1 (lower bound). \emph{Counting:} Repeats like jan_enrollment; for totals that count each successor plan-county once, sum it over rows with \code{jan_first} TRUE.
+\item \code{mar_src}: Source of mar_enrollment: reported, suppressed, mixed, no_record, terminated, or dropped_county; NA when not yet posted.
+\item \code{mar_enrollment_once}: mar_enrollment on one row per successor plan-county (the jan_first row), 0 on its other links.
+\item \code{mar_enrollment_split}: mar_enrollment divided equally across the successor plan-county's links.
+\item \code{apr_enrollment}: April enrollment of the successor plan in the county (same rules and plan-counties as jan_enrollment; 0 for terminated links and dropped counties). NA until the April file is posted. \emph{Counting:} Repeats on every link to the same successor plan-county (see \code{curr_links}). For totals that count each plan-county once, sum \code{jan_enrollment_once} or \code{jan_enrollment_split}.
+\item \code{apr_enrollment_low}: As apr_enrollment with suppressed cells as 1 (lower bound). \emph{Counting:} Repeats like jan_enrollment; for totals that count each successor plan-county once, sum it over rows with \code{jan_first} TRUE.
+\item \code{apr_src}: Source of apr_enrollment: reported, suppressed, mixed, no_record, terminated, or dropped_county; NA when not yet posted.
+\item \code{apr_enrollment_once}: apr_enrollment on one row per successor plan-county (the jan_first row), 0 on its other links.
+\item \code{apr_enrollment_split}: apr_enrollment divided equally across the successor plan-county's links.
 \item \code{curr_is_incumbent}: TRUE when a December plan in the county continues into this successor plan-county (a renewal, consolidation, SAR or SAE link whose successor serves the county in January); FALSE otherwise. NA on terminated and dropped-county links, which carry no January enrollment.
 \item \code{successor_serves}: TRUE when the January landscape lists the successor plan in this county.
 \item \code{sar_dropped}: Service-area-reduction link whose successor no longer serves the county.
@@ -73,6 +88,10 @@ the others) or \code{dec_enrollment_split} / \code{jan_enrollment_split} (the va
 shared equally across the links). \code{forced_county} (with \code{forced_reason})
 says whether a plan-county's enrollees were forced out; the link-level
 \code{forced} flags individual links.
+
+The \code{feb_}, \code{mar_} and \code{apr_} enrollment columns follow the January
+rules for February, March and April of the January year (NA until CMS
+posts the month), with the same \verb{_once} and \verb{_split} versions.
 
 The plan universe is individual-market Medicare Advantage plus special
 needs plans in the CMS landscape, on both the December and January side;

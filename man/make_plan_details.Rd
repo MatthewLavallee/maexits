@@ -24,5 +24,5 @@ individual-market MA and SNP plans in the landscape files (standalone
 drug plans and Medicare-Medicaid Plans excluded), with the plan's
 organization, premiums, Part D deductible and benefit type, in-network
 out-of-pocket maximum (MOOP), star ratings and SNP details. See
-\link{plan_details} for every column and its coverage by year.
+\link{plan_info} for every column and its coverage by year.
 }

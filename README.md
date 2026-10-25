@@ -39,34 +39,34 @@ d[, sum(dec_enrollment[lost_coverage]) / sum(dec_enrollment)]   # share who lost
 d[lost_coverage == TRUE, .(people = sum(dec_enrollment)), by = outcome]
 
 # Share in plans CMS terminated or cut from the county, every year on September enrollment
-e <- maexits_data("exits")
+e <- maexits_data("exit_sept")
 e[, .(share = sum(sep_enrollment[exit_type != "none"]) / sum(sep_enrollment)), keyby = dec_year]
 
 maexits_data("county_panel", years = 2024:2025, states = "MD")
-maexits_data("plan_details", plans = "H2001", years = 2026)
+maexits_data("plan_info", plans = "H2001", years = 2026)
 cms_enrollment("2026-09", states = "MD", ma_only = TRUE)  # any CMS month since Dec 2019
 ```
 
-Loaders filter by `plans`, `states`, `counties`, `years` (`months` for enrollment) and `variables`. A transition is indexed by its December: `dec_year` 2025 is December 2025 to January 2026.
+Loaders filter by `plans`, `states`, `counties`, `years` and `variables` (`cms_enrollment()` by month). A transition is indexed by its December: `dec_year` 2025 is December 2025 to January 2026.
 
 ## Datasets
 
 | Dataset | One row per | Contents |
 |---|---|---|
-| `exits` | December plan × county | whether CMS terminated the plan or cut the county from its service area the next January; December and September enrollment (September covers the newest year before its December file is out) |
+| `county_panel` | county × year | exit rate, displaced enrollment, December, January, February, March and April enrollment, 2018 penetration, benchmark |
+| `plan_county` | crosswalk link × county × year | crosswalk status, December through April enrollment, exit flags |
+| `displacement` | December plan × county | January outcome, lost coverage, whether the plan, contract or parent left, the county's plans next January, the successor's and the county's January–April enrollment, plan details |
+| `exits` | December plan × county | whether CMS terminated the plan or cut the county from its service area the next January, on December enrollment |
+| `exit_sept` | December plan × county | the same exits on September enrollment, every year including the newest (out before its December file) |
 | `pdp_exits` | December standalone Part D plan × state | whether CMS terminated the drug plan the next January; December and September enrollment |
-| `displacement` | December plan × county | January outcome, lost coverage, whether the plan, contract or parent left, the county's plans next January, plan details |
-| `plan_details` | plan × segment × year | organization and parent, premiums, deductible, out-of-pocket maximum, star ratings, SNP details |
-| `county_panel` | county × year | exit rate, displaced enrollment, December and January enrollment, 2018 penetration, benchmark |
-| `plan_county` | crosswalk link × county × year | crosswalk status, December and January enrollment, exit flags |
-| `landscape` | plan × segment × county × year | service areas (CY2016 on), plan type, SNP type |
-| `enrollment` | plan × county × month | the December and January enrollment the pipeline uses |
+| `plan_info` | plan × segment × year | organization and parent, premiums, deductible, out-of-pocket maximum, star ratings, SNP details, Part B giveback and supplemental benefits (dental, vision, hearing, OTC allowance, meals, transportation, fitness, and more), CY2018 on |
 
 Each dataset has a help page (`?displacement`), and [DATA_DICTIONARY.md](DATA_DICTIONARY.md) defines every column.
 
-- **Counting.** `displacement` and `exits` have one row per plan-county, and `pdp_exits` one per plan-state, so sums count each enrollee once. `plan_county` has one row per crosswalk link, so a plan's enrollment can repeat across rows; its `_once` columns, and `county_panel`'s, count each plan-county once. The `counting` column of `maexits_catalog()` flags every such column.
-- **Suppressed counts.** CMS suppresses counts under 11. In `displacement`, `exits`, `pdp_exits`, `plan_county` and `county_panel` each suppressed cell counts as 10, and the `_low` columns count it as 1. `enrollment` leaves them out of its totals and counts them in `n_suppressed`.
-- **Plan universe.** Individual-market MA plans and SNPs; standalone drug plans, Medicare-Medicaid Plans and employer group plans are excluded. `pdp_exits` covers individual-market standalone drug plans, and `enrollment` and `cms_enrollment()` hold every plan in the CMS files.
+- **Counting.** `displacement`, `exits` and `exit_sept` have one row per plan-county, and `pdp_exits` one per plan-state, so sums count each enrollee once. `plan_county` has one row per crosswalk link, so a plan's enrollment can repeat across rows; its `_once` columns, and `county_panel`'s, count each plan-county once. The `counting` column of `maexits_catalog()` flags every such column.
+- **Suppressed counts.** CMS suppresses counts under 11. Each suppressed cell counts as 10, and the `_low` columns count it as 1.
+- **Plan universe.** Individual-market MA plans and SNPs; standalone drug plans, Medicare-Medicaid Plans and employer group plans are excluded. `pdp_exits` covers individual-market standalone drug plans, and `cms_enrollment()` holds every plan in the CMS files.
+- **Spring months.** February, March and April enrollment follow the January plans through the MA Open Enrollment Period (January–March, changes effective the next month), so April is the first month after it. These columns are NA for a transition until CMS posts the month.
 
 ## Building the data
 

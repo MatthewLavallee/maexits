@@ -20,12 +20,9 @@ A data.table with these columns:
 \item \code{snp_type}: SNP type: Dual-Eligible, Chronic or Disabling Condition, or Institutional; NA for other plans.
 \item \code{exit_type}: What CMS's crosswalk does to the plan in this county for the next January: terminated (every crosswalk link of the plan-county is a termination), service_area_reduction (the plan renews with a service-area reduction and neither it nor any other plan it maps to serves the county), or none. none includes plan-counties moved to a plan that does not serve the county or renewed without listing in the county, which displacement counts as having lost coverage.
 \item \code{xwalk_statuses}: The CMS crosswalk statuses of the plan-county's links, joined with " + ".
-\item \code{dec_enrollment}: December enrollment of the plan in the county: reported count, 10 per CMS-suppressed cell, 0 with no CMS record. NA for the newest dec_year until December enrollment is out. Each plan-county appears once, so sums count everyone once.
+\item \code{dec_enrollment}: December enrollment of the plan in the county: reported count, 10 per CMS-suppressed cell, 0 with no CMS record. Each plan-county appears once, so sums count everyone once.
 \item \code{dec_enrollment_low}: As dec_enrollment with suppressed cells as 1 (lower bound).
 \item \code{dec_src}: Source of dec_enrollment: reported, suppressed, mixed, or no_record.
-\item \code{sep_enrollment}: September enrollment of the plan in the county (same rules as dec_enrollment), every dec_year. Use it to compare the newest transition with earlier ones before its December enrollment is out.
-\item \code{sep_enrollment_low}: As sep_enrollment with suppressed cells as 1 (lower bound).
-\item \code{sep_src}: Source of sep_enrollment: reported, suppressed, mixed, or no_record.
 }
 }
 \description{
@@ -33,9 +30,11 @@ One row per December plan and county (\code{dec_year}, contract, plan,
 county) for every individual-market MA plan and SNP the December
 landscape and the crosswalk list, with whether CMS's crosswalk
 terminated the plan or cut the county from its service area for the
-next January (\code{exit_type}), and the plan-county's enrollment in
-December and in September of \code{dec_year}. Built by \code{\link[=make_exits]{make_exits()}}. Load
-it with \code{maexits_data("exits")}.
+next January (\code{exit_type}), and the plan-county's December enrollment.
+It covers the transitions with December enrollment
+(\code{MAEXITS_XWALK_YEARS}); \link{exit_sept} gives the same plan-counties on
+September enrollment, including the newest transition. Built by
+\code{\link[=make_exits]{make_exits()}}. Load it with \code{maexits_data("exits")}.
 }
 \section{Counting}{
 
@@ -44,18 +43,6 @@ share of December enrollment in plans CMS terminated or cut from the
 county is
 \code{sum(dec_enrollment[exit_type != "none"]) / sum(dec_enrollment)}, and
 \code{exit_type} splits it into terminations and service-area reductions.
-}
-
-\section{December and September}{
-
-December enrollment covers the transitions in \code{MAEXITS_XWALK_YEARS}.
-September covers \code{MAEXITS_EXITS_YEARS}, which adds the newest
-transition once its crosswalk is registered, two months before its
-December enrollment comes out: compare it with earlier years through
-\code{sep_enrollment}.
-September gives shares 0.01-0.28 points higher than December
-(2018-2025). The plan-counties and \code{exit_type} are the same for both
-months.
 }
 
 \section{What counts as an exit}{
@@ -72,6 +59,6 @@ here they are \code{none}.
 }
 
 \seealso{
-\code{\link[=maexits_data]{maexits_data()}}, \link{displacement}, \link{plan_details}
+\code{\link[=maexits_data]{maexits_data()}}, \link{exit_sept}, \link{displacement}, \link{plan_info}
 }
 \keyword{datasets}

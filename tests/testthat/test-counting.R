@@ -108,8 +108,8 @@ test_that("the variable key flags every repeated column and names its once-count
 })
 
 test_that("help pages list only their own dataset's variables", {
-  fmt <- .rd_format("landscape")
-  expect_equal(length(fmt) - 2L, nrow(maexits_catalog("landscape")))
+  fmt <- .rd_format("plan_info")
+  expect_equal(length(fmt) - 2L, nrow(maexits_catalog("plan_info")))
   expect_false(any(grepl("dec_enrollment", fmt)))
   expect_true(any(grepl("\\*Counting:\\*", .rd_format("plan_county"))))
 })

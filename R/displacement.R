@@ -133,6 +133,25 @@ make_displacement <- function(at = NULL, landscape = NULL, plan_details = NULL,
     penetration_2018 = penetration_2018[1], eligibles_2018 = eligibles_2018[1],
     enrolled_2018 = enrolled_2018[1], benchmark = benchmark[1]
   ), by = key]
+  # January-April benchmarks: enrollment of the chosen successor plan in the
+  # county (NA when coverage was lost), and the county's total individual MA
+  # enrollment in each month (each successor plan-county once; NA where the
+  # month is not yet posted)
+  bm <- c("jan", intersect(names(MAEXITS_SPRING_MONTHS), sub("_enrollment_once$", "", names(at))))
+  succ <- d[, c(list(.served = .served[1]), lapply(.SD, `[`, 1)), by = key,
+            .SDcols = paste0(bm, "_enrollment")]
+  for (m in bm) set(succ, which(!succ$.served), paste0(m, "_enrollment"), NA_real_)
+  succ[, .served := NULL]
+  setnames(succ, paste0(bm, "_enrollment"), paste0("successor_", bm, "_enrollment"))
+  pc <- succ[pc, on = key]
+  cty <- unique(at[, .(dec_year = as.integer(dec_year), county_name, state_name)])
+  for (m in bm) {
+    s <- at[, .(v = if (all(is.na(.SD[[2]]))) NA_real_ else sum(.SD[[1]], na.rm = TRUE)),
+            by = .(dec_year = as.integer(dec_year), county_name, state_name),
+            .SDcols = c(paste0(m, "_enrollment_once"), paste0(m, "_src"))]
+    setnames(s, "v", paste0("county_", m, "_enrollment"))
+    cty <- s[cty, on = .(dec_year, county_name, state_name)]
+  }
   .vcheck(all(pc$forced_county == is.na(pc$best_rank)),
           "displacement: forced_county disagrees with the successor links for %d plan-counties",
           sum(pc$forced_county != is.na(pc$best_rank)))
@@ -255,6 +274,7 @@ make_displacement <- function(at = NULL, landscape = NULL, plan_details = NULL,
   pc[, c(".row", "n_same", "jan_year") := NULL]
 
   # --- County totals -------------------------------------------------------------
+  pc <- cty[pc, on = .(dec_year, county_name, state_name)]
   pc[, `:=`(county_dec_enrollment = sum(dec_enrollment),
             county_lost_enrollment = sum(dec_enrollment[lost_coverage])),
      by = .(dec_year, county_name, state_name)]
@@ -280,7 +300,8 @@ make_displacement <- function(at = NULL, landscape = NULL, plan_details = NULL,
              "parent_exits_county", "parent_nonsnp_in_county_jan", "n_plans_jan",
              "n_plans_jan_other_parent", "n_parents_jan", "n_same_snp_type_jan", "n_plans_jan_all",
              "n_plans_dec_county", "n_parents_dec_county", "county_dec_enrollment",
-             "county_lost_enrollment", "county_lost_share", "penetration_2018", "eligibles_2018",
+             "county_lost_enrollment", "county_lost_share", paste0("successor_", bm, "_enrollment"),
+             paste0("county_", bm, "_enrollment"), "penetration_2018", "eligibles_2018",
              "enrolled_2018", "benchmark", "plan_type", "snp", "snp_type")
   setcolorder(pc, c(front, setdiff(names(pc), front)))
   setorderv(pc, key)

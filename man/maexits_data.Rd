@@ -5,11 +5,10 @@
 \title{Load a Processed Dataset}
 \usage{
 maexits_data(
-  dataset = c("county_panel", "plan_county", "displacement", "exits", "pdp_exits",
-    "plan_details", "landscape", "enrollment"),
+  dataset = c("county_panel", "plan_county", "displacement", "exits", "exit_sept",
+    "pdp_exits", "plan_info"),
   plans = NULL,
   years = NULL,
-  months = NULL,
   states = NULL,
   counties = NULL,
   variables = NULL,
@@ -19,16 +18,14 @@ maexits_data(
 }
 \arguments{
 \item{dataset}{One of \code{"county_panel"}, \code{"plan_county"}, \code{"displacement"},
-\code{"exits"}, \code{"pdp_exits"}, \code{"plan_details"}, \code{"landscape"}, \code{"enrollment"}.}
+\code{"exits"}, \code{"exit_sept"}, \code{"pdp_exits"}, \code{"plan_info"}.}
 
 \item{plans}{Plans to keep: \code{"H1234-001"} for one plan, \code{"H1234"} for
 every plan in a contract. Not available for the county panel.}
 
 \item{years}{Years to keep: \code{dec_year} for \code{county_panel},
-\code{plan_county}, \code{displacement}, \code{exits} and \code{pdp_exits}, contract year for \code{plan_details} and
-\code{landscape}, calendar year for \code{enrollment}.}
-
-\item{months}{\code{enrollment} only: months as \code{"YYYY-MM"} strings or Dates.}
+\code{plan_county}, \code{displacement}, \code{exits}, \code{exit_sept} and \code{pdp_exits};
+contract year for \code{plan_info}.}
 
 \item{states}{State names or postal abbreviations (\code{"MD"}, \code{"Maryland"}).}
 
@@ -51,7 +48,7 @@ them; \code{options(maexits.counting_note = FALSE)} turns it off.
 }
 \description{
 Loads one of the pipeline's processed tables and keeps only the plans,
-years or months, states, counties and variables asked for. The table is
+years, states, counties and variables asked for. The table is
 downloaded once from the package's GitHub data release (a few MB to
 about 30 MB) and cached in \code{\link[=maexits_cache_dir]{maexits_cache_dir()}}.
 }
@@ -60,33 +57,37 @@ Datasets (each has a help page listing every variable, e.g.
 \code{?plan_county}; \code{\link[=maexits_catalog]{maexits_catalog()}} has the same list as a table):
 \itemize{
 \item \code{"county_panel"} (\link{county_panel}): county x transition year. Exit rate,
-displaced enrollment, December and January enrollment, 2018
-penetration, benchmark.
+displaced enrollment, December and January enrollment, February-April
+enrollment of the January plans, 2018 penetration, benchmark.
 \item \code{"plan_county"} (\link{plan_county}): plan x county x transition year, one
-row per crosswalk link. Crosswalk status, December and January
-enrollment, forced-exit flags, role.
+row per crosswalk link. Crosswalk status, December enrollment, January
+to April enrollment of the successor plan in the county, forced-exit
+flags, role.
 \item \code{"displacement"} (\link{displacement}): one row per December plan x county,
 with its December enrollment, what happened to it in January
 (\code{outcome}, \code{lost_coverage}), how far the exit reached, the county's
-plans next January, and the plan's details. Built for counting who
-lost their plan; each plan-county appears once.
+plans next January, January-April enrollment of the successor plan
+and of the county, and the plan's details. Built for counting who lost
+their plan; each plan-county appears once.
 \item \code{"exits"} (\link{exits}): one row per December plan x county, with whether
 CMS terminated the plan or cut the county from its service area the
-next January, and its December and September enrollment. September
-covers the newest transition before its December file is out.
+next January, and its December enrollment; transitions whose December
+enrollment is out.
+\item \code{"exit_sept"} (\link{exit_sept}): the same plan-counties and exit types on
+September enrollment, for every transition including the newest, whose
+December enrollment is not out yet.
 \item \code{"pdp_exits"} (\link{pdp_exits}): one row per December standalone Part D
 plan (PDP) x state, with whether CMS terminated it the next January,
 and its December and September enrollment. Filter it by \code{states}, not
 \code{counties}.
-\item \code{"plan_details"} (\link{plan_details}): plan x segment x contract year:
+\item \code{"plan_info"} (\link{plan_info}): plan x segment x contract year:
 organization and parent, premiums, deductible, out-of-pocket maximum,
-star ratings, SNP details.
-\item \code{"landscape"} (\link{landscape}): plan service areas by contract year, with
-plan type, SNP type and D-SNP integration status.
-\item \code{"enrollment"} (\link{enrollment}): the December and January plan x county
-enrollment the pipeline uses (December 2018-2025, January 2018-2026).
-For other months use \code{\link[=cms_enrollment]{cms_enrollment()}}.
+star ratings, SNP details, Part B premium reduction ("giveback") and
+supplemental benefits.
 }
+
+Any month of CMS plan-county enrollment is available from
+\code{\link[=cms_enrollment]{cms_enrollment()}}.
 
 A transition is indexed by its December year: \code{dec_year} 2025 is the
 December 2025 to January 2026 transition.
@@ -107,7 +108,7 @@ maexits_data("county_panel", years = 2024:2025, states = "MD",
 maexits_data("plan_county", plans = c("H2001", "H3447-020"), years = 2025,
              variables = c("status", "forced_county", "dec_enrollment_once"))
 
-# December 2025 enrollment for one county
-maexits_data("enrollment", months = "2025-12", counties = 24005)
+# The newest transition on September enrollment
+maexits_data("exit_sept", years = 2026, states = "VT")
 }
 }

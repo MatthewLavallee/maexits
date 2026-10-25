@@ -81,24 +81,23 @@ test_that("results are copies: changing one does not change the next", {
 test_that("bad requests give actionable errors", {
   local_fake_release()
   expect_error(maexits_data("county_panel", variables = "nope"), "has no variable\\(s\\) nope")
-  expect_error(maexits_data("county_panel", months = "2025-12"), "months applies to the enrollment")
   expect_error(maexits_data("county_panel", states = "ZZ"), "unknown state abbreviation")
-  expect_error(maexits_data("landscape"), "has no landscape dataset")
+  expect_error(maexits_data("landscape"), "should be one of")
   expect_error(maexits_catalog("nope"), "unknown dataset")
-  expect_error(maexits_data("plan_details", states = "MD"), "has no counties")
+  expect_error(maexits_data("plan_info", states = "MD"), "has no counties")
 })
 
 test_that("a dataset added to a release after its manifest was cached is found", {
   rel <- local_fake_release()
   suppressMessages(maexits_data("county_panel"))       # caches the manifest
-  saveRDS(data.frame(year = 2026L, plan_key = "H0001-001"), file.path(rel, "plan_details.rds"))
-  f <- file.path(rel, "plan_details.rds")
+  saveRDS(data.frame(year = 2026L, plan_key = "H0001-001"), file.path(rel, "plan_info.rds"))
+  f <- file.path(rel, "plan_info.rds")
   man <- utils::read.csv(file.path(rel, "manifest.csv"), stringsAsFactors = FALSE)
-  man <- rbind(man, data.frame(dataset = "plan_details", file = basename(f), rows = 1L, columns = 2L,
+  man <- rbind(man, data.frame(dataset = "plan_info", file = basename(f), rows = 1L, columns = 2L,
                                bytes = file.size(f), md5 = unname(tools::md5sum(f))))
   utils::write.csv(man, file.path(rel, "manifest.csv"), row.names = FALSE)
-  expect_equal(suppressMessages(maexits_data("plan_details"))$plan_key, "H0001-001")
-  expect_error(maexits_data("landscape"), "has no landscape dataset")
+  expect_equal(suppressMessages(maexits_data("plan_info"))$plan_key, "H0001-001")
+  expect_error(maexits_data("exit_sept"), "has no exit_sept dataset")
 })
 
 test_that("a corrupt download is rejected", {
@@ -116,7 +115,7 @@ test_that("catalog covers every dataset", {
   expect_setequal(unique(cat$dataset),
                   c(names(.DATASETS), "cms_enrollment"))
   expect_equal(names(cat), c("dataset", "variable", "description", "counting"))
-  expect_equal(unique(maexits_catalog("landscape")$dataset), "landscape")
+  expect_equal(unique(maexits_catalog("plan_info")$dataset), "plan_info")
 })
 
 test_that("months, plans and CMS URLs are parsed consistently", {

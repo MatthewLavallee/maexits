@@ -12,12 +12,15 @@ maexitsv2/
 ├── R/
 │   ├── config.R                # years covered + exact CMS input files (edit this each cycle)
 │   ├── validate.R              # check_inputs() and the fail-loud checks every run performs
-│   ├── data_build.R            # make_enrollment(), make_landscape(), make_analytic()
+│   ├── data_build.R            # make_enrollment(), make_landscape(), make_analytic() (with February-April enrollment)
 │   ├── data_augment.R          # FIPS, penetration, benchmark, augment_analytic(), make_county_panel(), run_data_pipeline()
 │   ├── plan_details.R          # make_plan_details(): premiums, MOOP, stars, SNP details by plan and year
 │   ├── displacement.R          # make_displacement(): one row per December plan x county, with its January outcome
-│   ├── exits.R                 # make_exits(): December plan x county, CMS's terminations and SARs, December and September enrollment
+│   ├── exits.R                 # make_exits(), make_exit_sept(): December plan x county, CMS's terminations and SARs, on December or September enrollment
 │   ├── pdp_exits.R             # make_pdp_exits(): December standalone Part D plan x state, terminations, December and September enrollment
+│   ├── medicare_enrollment.R   # make_medicare_enrollment(): county x month Original Medicare and MA enrollment (CMS Medicare Monthly Enrollment)
+│   ├── pbp_benefits.R          # make_pbp_benefits(): Part B giveback and supplemental benefits by plan and year (CMS PBP Benefits files)
+│   ├── plan_info.R             # make_plan_info(): plan_details joined with pbp_benefits
 │   ├── preliminary.R           # run_preliminary() / backtest_preliminary(): estimate before Dec/Jan CPSC
 │   ├── release_watch.R         # check_cms_releases(), schedule_release_check(): know when next cycle's files are out
 │   ├── data_api.R              # maexits_data(), cms_enrollment(): load and filter data
@@ -52,7 +55,7 @@ unzip derived_data.zip
 
 (Or download `derived_data.zip` from the release page on GitHub.)
 
-This restores the full set of derived tables to `trunk/derived/` (`december_enrollment.csv`, `january_enrollment.csv`, `landscape.csv`, `analytictable.csv`, `analytictable_augmented.csv`, `county_panel.csv`, `plan_details.csv`, `displacement.csv`, `exits.csv`, `pdp_exits.csv`) and lets you skip the ~6 GB raw rebuild entirely.
+This restores the full set of derived tables to `trunk/derived/` (`december_enrollment.csv`, `january_enrollment.csv`, `february_enrollment.csv`, `march_enrollment.csv`, `april_enrollment.csv`, `landscape.csv`, `analytictable.csv`, `analytictable_augmented.csv`, `county_panel.csv`, `plan_details.csv`, `displacement.csv`, `exits.csv`, `exit_sept.csv`, `pdp_exits.csv`, `medicare_enrollment.csv`, `pbp_benefits.csv`, `plan_info.csv`) and lets you skip the ~6 GB raw rebuild entirely.
 
 **(b) County panel only.** `trunk/derived/county_panel.csv` (the analysis-ready county × year panel, ~6 MB) is committed uncompressed and is available immediately after cloning — no unzip required. This is sufficient for all geographic-analysis functions.
 
@@ -64,11 +67,13 @@ All raw inputs are PUBLIC files from CMS and NBER. The `raw/` directory (~6 GB) 
 
 | Dataset | Used for | Source (page title) | URL | Repo folder |
 |---|---|---|---|---|
-| CPSC Monthly Enrollment by Contract/Plan/State/County | `make_enrollment()` Dec & Jan enrollment by contract×plan×county; also the SSA↔FIPS crosswalk for FIPS and benchmark joins | Monthly Enrollment by Contract/Plan/State/County \| CMS | https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-advantagepart-d-contract-and-enrollment-data/monthly-enrollment-contract/plan/state/county | `raw/december enrollment/`, `raw/january enrollment/` |
+| CPSC Monthly Enrollment by Contract/Plan/State/County | `make_enrollment()` Dec & Jan enrollment by contract×plan×county; also the SSA↔FIPS crosswalk for FIPS and benchmark joins | Monthly Enrollment by Contract/Plan/State/County \| CMS | https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-advantagepart-d-contract-and-enrollment-data/monthly-enrollment-contract/plan/state/county | `raw/december enrollment/`, `raw/january enrollment/`, `raw/february enrollment/`, `raw/march enrollment/`, `raw/april enrollment/` |
 | MA / Part D Landscape Source Files | `make_landscape()` MA + SNP plan service areas, plan types, SNP flags (CY2016–CY2026; PDP dropped); `make_plan_details()` premiums, deductible, MOOP, star ratings, SNP details | Benefits Data \| CMS (Landscape Source Files, within MA/Part D Contract and Enrollment Data) | https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-advantagepart-d-contract-and-enrollment-data/benefits-data | `raw/landscape/CY2016` … `raw/landscape/CY2026` |
 | Plan and Premium Information for Medicare Plans Offering Part D Coverage (CY2018–CY2024) | `make_plan_details()` Part C and Part D premiums, low-income premium, Part C/D star ratings (CY2024) | Benefits Data \| CMS (same page as the landscape files) | https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-advantagepart-d-contract-and-enrollment-data/benefits-data | the zip (CY2018–2023) or csvs (CY2024) registered in `MAEXITS_PARTD_REPORT_FILES` under `raw/landscape/CY<year>/` |
 | Part C&D Plan Crosswalk files | `make_analytic()` / `augment_analytic()` classify each Dec(N-1)→Jan(N) transition by crosswalk STATUS/DESCRIPTION (renewals, consolidations, SAR/SAE, terminations) | Plan Crosswalks \| CMS (landing); per-year e.g. "2025 Part C&D Plan Crosswalk \| CMS" | https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-advantagepart-d-contract-and-enrollment-data/plan-crosswalks | `raw/plan crosswalk/` |
 | MA State/County Penetration (2018-12) | `add_penetration()` 2018 county MA penetration → `penetration_2018`, `eligibles_2018`, penetration quartiles | MA State/County Penetration \| CMS | https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-advantagepart-d-contract-and-enrollment-data/ma-state/county-penetration | `raw/penetration/State_County_Penetration_MA_2018_12/` |
+| Medicare Monthly Enrollment (data.cms.gov) | `make_medicare_enrollment()` county × month counts of everyone in Medicare, Original Medicare, MA and other health plans, Part D and duals (January 2018 on) | Medicare Monthly Enrollment \| CMS (data.cms.gov) | https://data.cms.gov/summary-statistics-on-beneficiary-enrollment/medicare-and-medicaid-reports/medicare-monthly-enrollment | `raw/medicare monthly enrollment/` (one CSV; CMS reposts the full history monthly) |
+| Plan Benefit Package (PBP) Benefits files | `make_pbp_benefits()` Part B premium reduction and supplemental benefits (dental, vision, hearing, OTC, meals, transportation, fitness, in-home support, food and produce) by plan and contract year (CY2018 on) | Benefits Data \| CMS ("PBP Benefits - <year>" pages) | https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-advantagepart-d-contract-and-enrollment-data/benefits-data | `raw/pbp/CY<year>/` (every quarterly vintage CMS posted; the one read is registered in `MAEXITS_PBP_FILES`) |
 | NBER Medicare Advantage Ratebook (county benchmark, Parts A&B, 0% bonus) | `add_benchmark()` county benchmark capitation rate by year → `benchmark` | Medicare Advantage Ratebook Data \| NBER | https://www.nber.org/research/data/medicare-advantage-ratebook-data | `raw/ratebook/` |
 | CMS Ratebooks & Supporting Data (underlying source of the NBER ratebook) | Reference / provenance for the NBER county benchmark rates | Ratebooks & Supporting Data \| CMS | https://www.cms.gov/medicare/payment/medicare-advantage-rates-statistics/ratebooks-supporting-data | (not downloaded directly; NBER repackages these into `countyrateYYYY.csv`) |
 
@@ -81,6 +86,7 @@ Notes on verification:
 The pipeline reads files by exact folder/filename patterns. The tree below shows the layout confirmed against `R/data_build.R`, `R/data_augment.R`, and the existing `raw/` listing. Year coverage was confirmed from the code, not assumed:
 
 - Enrollment: for each crosswalk year N in `MAEXITS_XWALK_YEARS` (`R/config.R`, currently 2019-2026) the build needs **December enrollment for N-1** and **January enrollment for N**, i.e. December 2018-2025 and January 2019-2026. The SSA↔FIPS lookup used by `add_fips()` and `add_benchmark()` is `MAEXITS_FIPS_LOOKUP_FILE` (`raw/january enrollment/CPSC_Enrollment_2025_01/CPSC_Enrollment_Info_2025_01.csv`), so that file must be present.
+- Spring enrollment (optional): February, March and April N CPSC in `raw/february enrollment/`, `raw/march enrollment/` and `raw/april enrollment/` (`MAEXITS_SPRING_FOLDERS`) for the February-April columns of `plan_county`, `county_panel` and `displacement`. A month not yet in `raw/` leaves its columns NA for that transition; `check_inputs()` says which.
 - Landscape: `make_landscape()` reads **CY2016 through the last crosswalk year** (CY2026 today; PDP rows dropped).
 - Crosswalk: one registered file per year in `MAEXITS_XWALK_FILES` → crosswalk years **2019-2026**, plus **2027** for the exits table.
 - PDP exits table: the PDP landscape for CY2018 through the last exits year: the CY2016-CY2023 PDP zips and CY2024 csvs registered in `MAEXITS_PDP_LANDSCAPE_FILES` (in the `raw/landscape/CY<year>/` folders, from the same CMS page as the MA landscape), then the PDP rows of the combined CY2025+ files.
@@ -112,6 +118,13 @@ raw/
 │   ├── CPSC_Enrollment_2024_01/CPSC_Enrollment_Info_2024_01.csv
 │   ├── CPSC_Enrollment_2025_01/CPSC_Enrollment_Info_2025_01.csv   <-- REQUIRED: SSA<->FIPS lookup (MAEXITS_FIPS_LOOKUP_FILE)
 │   └── CPSC_Enrollment_2026_01/CPSC_Enrollment_Info_2026_01.csv
+│
+├── february enrollment/        (optional; the same layout for march enrollment/ and april enrollment/)
+│   ├── CPSC_Enrollment_2019_02/CPSC_Enrollment_Info_2019_02.csv
+│   │     … one folder per year, 2019-2026 …
+│   └── CPSC_Enrollment_2026_02/CPSC_Enrollment_Info_2026_02.csv
+│        (2019 from downloads.cms.gov/files/cpsc_enrollment_2019_MM.zip; 2020 on from
+│         cms.gov/files/zip/monthly-enrollment-cpsc-<month>-YYYY.zip; the zips may sit alongside)
 │
 ├── landscape/
 │   ├── CY2016/ … CY2023/        (each: MA and SNP CSVs; reader greps filenames for "MA"/"SNP",
@@ -156,6 +169,16 @@ raw/
 │   ├── countyrate2025.csv
 │   └── countyrate2026.csv   (read once dec_year 2026 is built; run_preliminary() fills the benchmark with it)
 │
+├── medicare monthly enrollment/
+│   └── Medicare Monthly Enrollment Data_June 2026.csv   (registered as MAEXITS_MEDICARE_ENROLLMENT_FILE; 2013-01 to 2026-06)
+│
+├── pbp/                         (CMS PBP Benefits zips, kept unextracted; one registered per year in MAEXITS_PBP_FILES)
+│   ├── CY2018/pbp-benefits-2018-q1.zip … pbp-benefits-2018-q4.zip   (q4 registered)
+│   ├── …                        (CY2019–CY2024: every quarterly vintage CMS posted)
+│   ├── CY2025/pbp-benefits-2025.zip
+│   ├── CY2026/pbp-benefits-2026.zip
+│   └── CY2027/pbp-benefits-2027.zip
+│
 └── monthly enrollment/          (September of each dec_year, for the exits table and run_preliminary())
     ├── CPSC_Enrollment_2018_09/CPSC_Enrollment_Info_2018_09.csv
     │     … one folder per year …
@@ -192,7 +215,8 @@ devtools::load_all(".")
 
 # Check that every input exists, then run the full build: enrollment ->
 # landscape -> analytic table -> FIPS/penetration -> benchmark -> augment
-# -> county panel -> plan details -> displacement -> exits -> PDP exits.
+# -> county panel -> plan details -> displacement -> exits and exit_sept
+# -> PDP exits -> Medicare enrollment -> PBP benefits -> plan info.
 check_inputs()
 panel <- run_data_pipeline(save = TRUE, verbose = TRUE)
 
@@ -200,23 +224,28 @@ panel <- run_data_pipeline(save = TRUE, verbose = TRUE)
 # run_data_pipeline(out_dir = "/tmp/maexits_trial")
 ```
 
-`run_data_pipeline()` checks its inputs first, passes in-memory tables between steps, and runs the validation checks in `R/validate.R` along the way. It writes nothing until the whole run has succeeded. Then it writes all ten tables to `out_dir` (default `trunk/derived/`) together, so a failed run never leaves a mix of old and new files. A full build takes about 10 minutes and produces no warnings.
+`run_data_pipeline()` checks its inputs first, passes in-memory tables between steps, and runs the validation checks in `R/validate.R` along the way. It writes nothing until the whole run has succeeded. Then it writes all the tables to `out_dir` (default `trunk/derived/`) together, so a failed run never leaves a mix of old and new files. A full build takes about 10 minutes and produces no warnings.
 
 Individual steps can also be run on their own. Each function reads its inputs from `trunk/derived/` when its argument is `NULL`. Pass the landscape and the benchmarked table along explicitly, because `add_benchmark()` does not write a file:
 
 ```r
 dec <- make_enrollment("december enrollment")         # december_enrollment.csv
 jan <- make_enrollment("january enrollment")          # january_enrollment.csv
+for (f in MAEXITS_SPRING_FOLDERS) make_enrollment(f)  # february/march/april_enrollment.csv
 ls  <- make_landscape()                               # landscape.csv (MA + SNP; PDP dropped)
-at  <- make_analytic(ls, dec, jan)                    # analytictable.csv
+at  <- make_analytic(ls, dec, jan)                    # analytictable.csv (reads the spring tables)
 at  <- add_fips_and_penetration(at)                   # analytictable.csv (+ fips, 2018 penetration)
 at  <- add_benchmark(at)                              # + NBER county benchmark (in memory)
 at  <- augment_analytic(at, landscape = ls)           # analytictable_augmented.csv (sar_dropped, forced, role)
 panel <- make_county_panel(at)                        # county_panel.csv (county x dec_year)
 details <- make_plan_details()                        # plan_details.csv (plan x segment x contract year)
 ds  <- make_displacement(at, landscape = ls, plan_details = details, panel = panel)  # displacement.csv
-ex  <- make_exits(at)                                 # exits.csv (builds the September tables from raw/)
+ex  <- make_exits(at)                                 # exits.csv (December years; builds the September tables from raw/ for the check)
+es  <- make_exit_sept(at)                             # exit_sept.csv (every exits year, September enrollment)
 pdp <- make_pdp_exits()                               # pdp_exits.csv (PDP landscapes, crosswalks, CPSC)
+me  <- make_medicare_enrollment()                     # medicare_enrollment.csv (county x month, Original Medicare and MA)
+pbp <- make_pbp_benefits()                            # pbp_benefits.csv (plan x segment x contract year, supplemental benefits)
+pi  <- make_plan_info(details, pbp)                   # plan_info.csv (plan_details + pbp_benefits)
 ```
 
 ## Annual update (each new cycle)
@@ -229,10 +258,13 @@ Crosswalk year N covers the December N-1 → January N transition. The next cycl
 | ~Sep 24 – Oct 1 | CY N landscape (`CY<N>_Landscape_<yyyymm>.csv`) | `raw/landscape/CY<N>/` | Register the exact path in `MAEXITS_LANDSCAPE_FILES`. Use the initial release and record its readme date and md5; don't swap in later reissues. The file's `Contract Year` must equal N. Renamed or missing required columns fail loudly; added columns are ignored. Add new column names to `.LANDSCAPE_COLUMNS` in `data_build.R`. |
 | ~Oct 1 – 7 (Nov 4 in 2025) | N Part C&D Plan Crosswalk (`PlanCrosswalk<label>_<MMDDYYYY>.txt`) | `raw/plan crosswalk/` (never rename CMS files) | Register the exact filename in `MAEXITS_XWALK_FILES`. The label may not equal N; CMS named the 2025 file "2024". Read the readme's status table: new statuses stop the build until added to `MAEXITS_XWALK_STATUS_CLASS` and the role rules. |
 | ~Sep 10–21 | September N-1 CPSC | `raw/monthly enrollment/CPSC_Enrollment_<N-1>_09/` (**never** the december/january folders) | Needed by the exits table once the N crosswalk is registered; also the usual proxy for the preliminary estimate (below) |
-| After the crosswalk and landscape | — | — | Add N to `MAEXITS_EXITS_YEARS` and rerun `run_data_pipeline()`: the exits table gains `dec_year` N-1 on September enrollment (its December columns stay NA until January). Publish it with the other tables (see "After the January run"). |
+| After the crosswalk and landscape | — | — | Add N to `MAEXITS_EXITS_YEARS` and rerun `run_data_pipeline()`: `exit_sept` gains `dec_year` N-1 (`exits` gains it after the January run). Publish it with the other tables (see "After the January run"). |
 | ~Dec 11–14 | December N-1 CPSC | `raw/december enrollment/CPSC_Enrollment_<N-1>_12/` | Extract it exactly once. It is not read until N is in `MAEXITS_XWALK_YEARS`. Optionally rerun the preliminary estimate with this file as the proxy, for a December-based exit estimate before January arrives. |
 | ~Jan 8 – Feb 13 | January N CPSC | `raw/january enrollment/CPSC_Enrollment_<N>_01/` | Add N to `MAEXITS_XWALK_YEARS`, run `check_inputs()`, then do a trial `run_data_pipeline(out_dir = ...)`. Compare its `dec_year` ≤ N-2 rows with the committed tables (the regression test does this for 2018–2025), then run into `trunk/derived/`. |
+| ~Mar, Apr, May (CMS posts each month mid-next-month) | February, March and April N CPSC | `raw/february enrollment/CPSC_Enrollment_<N>_02/` etc. | Rerun `run_data_pipeline()`: the month's columns fill in for `dec_year` N-1. No config change. |
 | After the January run | — | — | Build the release files with `prepare_data_release()`, zip `trunk/derived/*.csv` as `derived_data.zip`, and publish both as a new data release; point `MAEXITS_DATA_RELEASE` at it. Record the new inputs and outputs in `provenance/` (raw manifest rows and a `derived_md5_<release>.txt`). Commit. |
+| Any time (CMS posts monthly, ~3-month lag) | Medicare Monthly Enrollment CSV (data.cms.gov) | `raw/medicare monthly enrollment/` | Replace the file and update `MAEXITS_MEDICARE_ENROLLMENT_FILE`; the table then runs through the newest month. Needed by the next January run so `medicare_enrollment` covers the new January. |
+| ~Oct 1 (with the landscape) | CY N PBP Benefits zip (`pbp-benefits-<N>.zip`) | `raw/pbp/CY<N>/` (never rename CMS files) | Register the exact path in `MAEXITS_PBP_FILES`. CMS reposts each year quarterly; keep earlier vintages and register a later one only deliberately. Changed column names stop the build with the missing columns listed. |
 | Late Jan – Feb | Possible CMS reissue of the December CPSC or the crosswalk | Replace in place | Compare md5s with `provenance/`. If one changed, rerun and diff. |
 
 `check_inputs()` lists everything that is still missing. Each validation check stops with a `[validate]` message that says what to fix. The thresholds (share of imputed values, January/December totals, SAR-dropped share, benchmark coverage, crosswalk content) come from the 2018–2025 data and are documented in `R/validate.R`.
@@ -291,13 +323,18 @@ testthat::test_dir("tests/testthat")                      #   checked against pr
 |---|---|---|
 | `december_enrollment.csv` | contract × plan × county | Aggregated CPSC December enrollment |
 | `january_enrollment.csv` | contract × plan × county | Aggregated CPSC January enrollment |
+| `february_enrollment.csv`, `march_enrollment.csv`, `april_enrollment.csv` | contract × plan × county | Aggregated CPSC February, March and April enrollment (the years in `raw/`) |
 | `landscape.csv` | contract × plan × segment × county × year | Harmonized MA + SNP service areas, plan types, SNP flags (CY2016-CY2026) |
 | `analytictable.csv` | crosswalk link × county × `dec_year` | Core analytic table: crosswalk `status`, successor IDs, `dec_enrollment`, `jan_enrollment` with `_low` bounds and sources, plan and SNP type, `fips`, 2018 penetration (no `benchmark` — it is added in-memory and written only to `analytictable_augmented.csv`) |
 | `analytictable_augmented.csv` | crosswalk link × county × `dec_year` | Adds `benchmark`, the exit flags (`sar_dropped`, `forced`, `forced_county`, `forced_reason`), `role`, and the counting columns (`prev_links`, `dec_enrollment_once`, `dec_enrollment_split`, ...) |
 | `plan_details.csv` | contract year × plan × segment | Plan characteristics from the landscape files, the Part D Plan and Premium reports and CPSC Contract Info (`make_plan_details()`) |
 | `displacement.csv` | December plan × county | One row per December plan-county: outcome in January, lost coverage, scope flags, alternatives, plan details (`make_displacement()`) |
 | `pdp_exits.csv` | December standalone Part D plan × state | One row per December PDP-state: whether CMS terminated the plan the next January (crosswalk, plus contracts in `MAEXITS_CMS_TERMINATED_CONTRACTS`), with December and September enrollment (`make_pdp_exits()`) |
-| `exits.csv` | December plan × county | One row per December plan-county: whether CMS terminated the plan or cut the county (SAR) the next January, with December and September enrollment; September runs through the newest registered crosswalk (`make_exits()`) |
+| `exits.csv` | December plan × county | One row per December plan-county: whether CMS terminated the plan or cut the county (SAR) the next January, with December enrollment, for the years with December files (`make_exits()`) |
+| `exit_sept.csv` | December plan × county | The same on September enrollment, through the newest registered crosswalk (`make_exit_sept()`) |
+| `plan_info.csv` | contract year × plan × segment | `plan_details` with the `pbp_benefits` columns (`make_plan_info()`); loaded as `plan_info` |
+| `pbp_benefits.csv` | contract year × plan × segment | Part B giveback and supplemental benefit flags (dental, vision, hearing, OTC with annual maximum, meals, transportation, worldwide emergency, fitness, in-home support, food and produce), CY2018 on, from CMS PBP Benefits files (`make_pbp_benefits()`) |
+| `medicare_enrollment.csv` | county × month | Everyone in Medicare, Original Medicare and MA-and-other counts, MA share, Part D, duals and age groups, January 2018 on, from CMS Medicare Monthly Enrollment (`make_medicare_enrollment()`) |
 | `county_panel.csv` | county × `dec_year` | Analysis-ready panel: exit rate, displaced enrollment, enrollment change, incumbent and new-entrant enrollment, exit group, `pen_quartile`, each summed over links and counted once per plan-county (`_once`) (committed uncompressed) |
 
 Field-level definitions, status categories, and derived-variable formulas are documented in [`DATA_DICTIONARY.md`](DATA_DICTIONARY.md). Per-function reference documentation is in `man/` (roxygen2-generated `.Rd` files).

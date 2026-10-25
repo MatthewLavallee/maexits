@@ -213,6 +213,44 @@ MAEXITS_WATCH_SOURCES <- list(
   nber_ratebook = "https://data.nber.org/ratebook"
 )
 
+# CMS Medicare Monthly Enrollment (data.cms.gov, "Medicare Monthly
+# Enrollment"; relative to raw/): county x month counts of everyone in
+# Medicare, Original Medicare and MA, for make_medicare_enrollment(). CMS
+# reposts the whole history each month as one CSV; replace the file and
+# update this name to extend the table.
+MAEXITS_MEDICARE_ENROLLMENT_FILE <- file.path(
+  "medicare monthly enrollment", "Medicare Monthly Enrollment Data_June 2026.csv")
+MAEXITS_MEDICARE_FIRST_YEAR <- 2018L
+
+# CMS Plan Benefit Package (PBP) Benefits files, relative to raw/pbp/, for
+# make_pbp_benefits(): one zip per contract year. CMS reissues each year's
+# file quarterly; register the exact vintage (the latest one on disk when it
+# was registered). From CY2025 CMS restructured the dental section; see
+# pbp_benefits.R. Never rename CMS files; register them.
+MAEXITS_PBP_FILES <- c(
+  "2018" = "CY2018/pbp-benefits-2018-q4.zip",
+  "2019" = "CY2019/pbp-benefits-2019-q4.zip",
+  "2020" = "CY2020/pbp-benefits-2020-quarter-4.zip",
+  "2021" = "CY2021/pbp-benefits-2021-updated-08022021.zip",
+  "2022" = "CY2022/pbp-benefits-2022-updated-07012022.zip",
+  "2023" = "CY2023/pbp-benefits-2023-quarter-4.zip",
+  "2024" = "CY2024/pbp-benefits-2024-quarter-4.zip",
+  "2025" = "CY2025/pbp-benefits-2025.zip",       # "updated as of 10/23/2024"
+  "2026" = "CY2026/pbp-benefits-2026.zip",
+  "2027" = "CY2027/pbp-benefits-2027.zip"
+)
+
+# Months after January whose CPSC plan-county enrollment is attached to each
+# successor plan-county, like January: February to April of the January year,
+# after the special enrollment period for enrollees whose plans exited (last
+# elections take effect March 1) and the MA open enrollment period (January 1 to
+# March 31, effective the 1st of the next month). Each month's files go under
+# raw/<folder>/ (CPSC_Enrollment_YYYY_MM/CPSC_Enrollment_Info_YYYY_MM.csv). A month
+# not yet posted for the newest transition is NA; nothing else changes.
+MAEXITS_SPRING_MONTHS <- c(feb = 2L, mar = 3L, apr = 4L)
+MAEXITS_SPRING_FOLDERS <- c(feb = "february enrollment", mar = "march enrollment",
+                            apr = "april enrollment")
+
 # MA penetration baseline (relative to raw/).
 MAEXITS_PENETRATION_FILE <- file.path(
   "penetration", "State_County_Penetration_MA_2018_12",

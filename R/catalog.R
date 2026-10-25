@@ -96,6 +96,25 @@
     v(ds, "star_part_c", "Part C summary star rating; CY2024 for plans with Part D (from the Part D report), all plans from CY2025."),
     v(ds, "star_part_d", "Part D summary star rating; CY2024 for plans with Part D, all plans from CY2025."))
 
+  mon <- c(feb = "February", mar = "March", apr = "April")
+  spring_panel <- do.call(rbind, lapply(names(mon), function(m) rbind(
+    v("county_panel", paste0("total_", m, "_enrollment_once"), sprintf("%s MA enrollment of the January plans in the county (the successor plan-counties of plan_county, each once); NA until the %s file is posted.", mon[[m]], mon[[m]])),
+    v("county_panel", paste0("total_", m, "_enrollment_once_low"), sprintf("As total_%s_enrollment_once, suppressed cells as 1 (lower bound).", m)),
+    v("county_panel", paste0("incumbent_", m, "_once"), sprintf("%s enrollment of successor plan-counties that a December plan in the county continues into (curr_is_incumbent), each once.", mon[[m]])),
+    v("county_panel", paste0("new_entrant_", m, "_once"), sprintf("All other %s enrollment of the January plans, each plan-county once.", mon[[m]])))))
+  spring_pc <- do.call(rbind, lapply(names(mon), function(m) rbind(
+    v("plan_county", paste0(m, "_enrollment"), sprintf("%s enrollment of the successor plan in the county (same rules and plan-counties as jan_enrollment; 0 for terminated links and dropped counties). NA until the %s file is posted.", mon[[m]], mon[[m]]), .COUNT_JAN),
+    v("plan_county", paste0(m, "_enrollment_low"), sprintf("As %s_enrollment with suppressed cells as 1 (lower bound).", m), .COUNT_JAN_LOW),
+    v("plan_county", paste0(m, "_src"), sprintf("Source of %s_enrollment: reported, suppressed, mixed, no_record, terminated, or dropped_county; NA when not yet posted.", m)),
+    v("plan_county", paste0(m, "_enrollment_once"), sprintf("%s_enrollment on one row per successor plan-county (the jan_first row), 0 on its other links.", m)),
+    v("plan_county", paste0(m, "_enrollment_split"), sprintf("%s_enrollment divided equally across the successor plan-county's links.", m)))))
+  bmk <- c(jan = "January", mon)
+  disp_bm <- rbind(
+    do.call(rbind, lapply(names(bmk), function(m) v("displacement", paste0("successor_", m, "_enrollment"),
+      sprintf("%s enrollment of the successor plan (successor_plan_key) in the county; NA when coverage was lost or the month is not yet posted. The successor's whole county enrollment, including enrollees from other plans consolidated into it.", bmk[[m]])))),
+    do.call(rbind, lapply(names(bmk), function(m) v("displacement", paste0("county_", m, "_enrollment"),
+      sprintf("%s MA enrollment of the January plans in the county, each successor plan-county once (equals county_panel total_%s_enrollment_once); NA until posted.", bmk[[m]], m), .COUNT_COUNTY_REPEAT))))
+
   rbind(
     # --- county_panel ---------------------------------------------------
     geo("county_panel"),
@@ -138,6 +157,7 @@
     v("county_panel", "exit_group_once", "Exit exposure from exit_rate_once, same bins as exit_group."),
     v("county_panel", "snp_dec_enrollment_once", "December enrollment in special needs plans (SNPs), each plan-county once."),
     v("county_panel", "snp_displaced_enrollment_once", "SNP December enrollment forced out (forced_county), each plan-county once."),
+    spring_panel,
 
     # --- plan_county ----------------------------------------------------
     v("plan_county", "dec_year", "December year of the transition."),
@@ -162,6 +182,7 @@
     v("plan_county", "jan_first", "TRUE on the one row per successor plan-county that carries its January value in jan_enrollment_once."),
     v("plan_county", "jan_enrollment_once", "jan_enrollment on one row per successor plan-county, 0 on its other links."),
     v("plan_county", "jan_enrollment_split", "jan_enrollment divided equally across the successor plan-county's links."),
+    spring_pc,
     v("plan_county", "curr_is_incumbent", "TRUE when a December plan in the county continues into this successor plan-county (a renewal, consolidation, SAR or SAE link whose successor serves the county in January); FALSE otherwise. NA on terminated and dropped-county links, which carry no January enrollment."),
     v("plan_county", "successor_serves", "TRUE when the January landscape lists the successor plan in this county."),
     v("plan_county", "sar_dropped", "Service-area-reduction link whose successor no longer serves the county."),
@@ -229,6 +250,7 @@
     v("displacement", "county_dec_enrollment", "December enrollment of all plans in the county (equals county_panel total_dec_enrollment_once).", .COUNT_COUNTY_REPEAT),
     v("displacement", "county_lost_enrollment", "December enrollment in the county that lost coverage (equals county_panel displaced_enrollment_once).", .COUNT_COUNTY_REPEAT),
     v("displacement", "county_lost_share", "county_lost_enrollment / county_dec_enrollment.", .COUNT_COUNTY_REPEAT),
+    disp_bm,
     v("displacement", "penetration_2018", "2018 MA penetration rate in the county.", .COUNT_COUNTY_REPEAT),
     v("displacement", "eligibles_2018", "2018 Medicare eligibles in the county.", .COUNT_COUNTY_REPEAT),
     v("displacement", "enrolled_2018", "2018 MA enrollees in the county.", .COUNT_COUNTY_REPEAT),
@@ -254,12 +276,29 @@
       "moved to a plan that does not serve the county or renewed without listing in the county,",
       "which displacement counts as having lost coverage.")),
     v("exits", "xwalk_statuses", "The CMS crosswalk statuses of the plan-county's links, joined with \" + \"."),
-    v("exits", "dec_enrollment", "December enrollment of the plan in the county: reported count, 10 per CMS-suppressed cell, 0 with no CMS record. NA for the newest dec_year until December enrollment is out. Each plan-county appears once, so sums count everyone once."),
+    v("exits", "dec_enrollment", "December enrollment of the plan in the county: reported count, 10 per CMS-suppressed cell, 0 with no CMS record. Each plan-county appears once, so sums count everyone once."),
     v("exits", "dec_enrollment_low", "As dec_enrollment with suppressed cells as 1 (lower bound)."),
     v("exits", "dec_src", "Source of dec_enrollment: reported, suppressed, mixed, or no_record."),
-    v("exits", "sep_enrollment", "September enrollment of the plan in the county (same rules as dec_enrollment), every dec_year. Use it to compare the newest transition with earlier ones before its December enrollment is out."),
-    v("exits", "sep_enrollment_low", "As sep_enrollment with suppressed cells as 1 (lower bound)."),
-    v("exits", "sep_src", "Source of sep_enrollment: reported, suppressed, mixed, or no_record."),
+
+    # --- exit_sept -----------------------------------------------------------
+    v("exit_sept", "dec_year", "December year of the transition (2026 = December 2026 to January 2027)."),
+    plan("exit_sept"),
+    v("exit_sept", "segment_id", "Plan segment in the county (the lowest, if the plan has several there)."),
+    geo("exit_sept"),
+    v("exit_sept", "plan_type", "Plan type (landscape)."),
+    v("exit_sept", "snp", "Special needs plan: Yes or No."),
+    v("exit_sept", "snp_type", "SNP type: Dual-Eligible, Chronic or Disabling Condition, or Institutional; NA for other plans."),
+    v("exit_sept", "exit_type", paste(
+      "What CMS's crosswalk does to the plan in this county for the next January:",
+      "terminated (every crosswalk link of the plan-county is a termination),",
+      "service_area_reduction (the plan renews with a service-area reduction and neither it",
+      "nor any other plan it maps to serves the county), or none. none includes plan-counties",
+      "moved to a plan that does not serve the county or renewed without listing in the county,",
+      "which displacement counts as having lost coverage.")),
+    v("exit_sept", "xwalk_statuses", "The CMS crosswalk statuses of the plan-county's links, joined with \" + \"."),
+    v("exit_sept", "sep_enrollment", "September enrollment of the plan in the county (September of dec_year): reported count, 10 per CMS-suppressed cell, 0 with no CMS record. Every dec_year, including the newest, whose December enrollment is not out yet. Each plan-county appears once."),
+    v("exit_sept", "sep_enrollment_low", "As sep_enrollment with suppressed cells as 1 (lower bound)."),
+    v("exit_sept", "sep_src", "Source of sep_enrollment: reported, suppressed, mixed, or no_record."),
 
     # --- pdp_exits ---------------------------------------------------------
     v("pdp_exits", "dec_year", "December year of the transition (2026 = December 2026 to January 2027)."),
@@ -283,32 +322,32 @@
     v("pdp_exits", "sep_enrollment_low", "As sep_enrollment with suppressed cells as 1 (lower bound)."),
     v("pdp_exits", "sep_src", "Source of sep_enrollment: reported, suppressed, mixed, or no_record."),
 
-    # --- plan_details ----------------------------------------------------
-    v("plan_details", "year", "Contract (plan) year."),
-    plan("plan_details"),
-    v("plan_details", "segment_id", "Plan segment (0 if unsegmented)."),
-    v("plan_details", "plan_type", "Plan type as labelled by CMS that year."),
-    v("plan_details", "snp", "Special needs plan: Yes or No."),
-    v("plan_details", "snp_type", "SNP type."),
-    details("plan_details"),
+    # --- plan_info -------------------------------------------------------
+    v("plan_info", "year", "Contract (plan) year."),
+    plan("plan_info"),
+    v("plan_info", "segment_id", "Plan segment (0 if unsegmented)."),
+    v("plan_info", "plan_type", "Plan type as labelled by CMS that year."),
+    v("plan_info", "snp", "Special needs plan: Yes or No."),
+    v("plan_info", "snp_type", "SNP type."),
+    details("plan_info"),
 
-    # --- landscape -------------------------------------------------------
-    v("landscape", "year", "Contract (plan) year."),
-    plan("landscape"),
-    v("landscape", "segment_id", "Plan segment (0 if unsegmented)."),
-    geo("landscape"),
-    v("landscape", "plan_type", "Plan type as labelled by CMS that year."),
-    v("landscape", "snp", "Special needs plan: Yes or No."),
-    v("landscape", "snp_type", "SNP type."),
-    v("landscape", "dsnp_integration", "D-SNP integration status (from CY2025): FIDE, HIDE, CO, or Not Applicable."),
-
-    # --- enrollment -------------------------------------------------------
-    v("enrollment", "month", "Month of the CMS file, \"YYYY-MM\" (December 2018-2025, January 2018-2026)."),
-    v("enrollment", "year", "Calendar year of the month."),
-    plan("enrollment"),
-    geo("enrollment"),
-    v("enrollment", "county_enrollment", "Sum of the reported CMS counts for the plan and county."),
-    v("enrollment", "n_suppressed", "Number of CMS-suppressed cells for the plan and county (each 1-10 enrollees; not included in county_enrollment)."),
+    # Plan Benefit Package columns (NA for the few plans without a PBP record)
+    v("plan_info", "partb_giveback", "TRUE if the plan uses MA rebates to reduce enrollees' Part B premium (the \"giveback\")."),
+    v("plan_info", "partb_giveback_amt", "Monthly Part B premium reduction in dollars; NA without a giveback. From CY2025 many plans report reductions under $5."),
+    v("plan_info", "dental_preventive", "Covers preventive dental (exams, cleanings, X-rays) as a mandatory supplemental benefit (PBP 16a to CY2024, 16b from CY2025)."),
+    v("plan_info", "dental_comprehensive", "Covers comprehensive dental (restorative, endodontics, periodontics, extractions, prosthodontics) as a mandatory supplemental benefit (PBP 16b to CY2024, 16c from CY2025)."),
+    v("plan_info", "eye_exam", "Covers routine eye exams (PBP 17a)."),
+    v("plan_info", "eyewear", "Covers eyeglasses or contact lenses (PBP 17b)."),
+    v("plan_info", "hearing_exam", "Covers routine hearing exams (PBP 18a)."),
+    v("plan_info", "hearing_aids", "Covers hearing aids (PBP 18b)."),
+    v("plan_info", "otc", "Offers an over-the-counter (OTC) items allowance (PBP 13b)."),
+    v("plan_info", "otc_annual_amt", "Plan maximum OTC allowance per year in dollars: the per-period maximum times the number of periods a year. NA without OTC or where the plan sets no maximum."),
+    v("plan_info", "meals", "Offers meals, e.g. after a hospital stay (PBP 13c)."),
+    v("plan_info", "transportation", "Covers transportation to medical appointments (PBP 10b)."),
+    v("plan_info", "worldwide_emergency", "Covers emergency or urgent care outside the United States (PBP 4c)."),
+    v("plan_info", "fitness", "Offers a fitness benefit, e.g. a gym membership (PBP 14c4)."),
+    v("plan_info", "in_home_support", "Offers in-home support services (PBP 14c21, from CY2020)."),
+    v("plan_info", "food_produce", "Offers food and produce as a special supplemental benefit for the chronically ill (PBP 13i, in any SSBCI or VBID package). NA before CY2020."),
 
     # --- cms_enrollment ------------------------------------------------------
     v("cms_enrollment", "month", "Month requested, \"YYYY-MM\"."),
@@ -339,12 +378,11 @@
 #' The variable key: every dataset the package can load, a description of
 #' each variable, and a `counting` note for variables whose values repeat
 #' across rows (see the "Counting rows" section of [plan_county]). Datasets
-#' "county_panel", "plan_county", "displacement", "exits", "pdp_exits",
-#' "plan_details", "landscape" and "enrollment" are loaded with
-#' [maexits_data()]; "cms_enrollment" with [cms_enrollment()]. The same
-#' information is in the help pages `?county_panel`, `?plan_county`,
-#' `?displacement`, `?exits`, `?pdp_exits`, `?plan_details`, `?landscape`,
-#' `?enrollment` and `?cms_enrollment`.
+#' "county_panel", "plan_county", "displacement", "exits", "exit_sept",
+#' "pdp_exits" and "plan_info" are loaded with [maexits_data()];
+#' "cms_enrollment" with [cms_enrollment()]. The same information is in the
+#' help pages `?county_panel`, `?plan_county`, `?displacement`, `?exits`,
+#' `?exit_sept`, `?pdp_exits`, `?plan_info` and `?cms_enrollment`.
 #'
 #' @param dataset Optional dataset name to show only its variables.
 #' @return A data.table with columns dataset, variable, description, counting.

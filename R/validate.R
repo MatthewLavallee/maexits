@@ -166,10 +166,22 @@ check_inputs <- function(xwalk_years = MAEXITS_XWALK_YEARS, exits_years = MAEXIT
         "landscape CY%d (PDP rows, for the PDP exits table) is missing or not registered", cy))
     }
   }
-  for (f in c(MAEXITS_FIPS_LOOKUP_FILE, MAEXITS_PENETRATION_FILE)) {
+  for (f in c(MAEXITS_FIPS_LOOKUP_FILE, MAEXITS_PENETRATION_FILE, MAEXITS_MEDICARE_ENROLLMENT_FILE,
+              file.path("pbp", MAEXITS_PBP_FILES))) {
     if (!file.exists(here("raw", f))) problems <- c(problems,
       sprintf("reference file raw/%s not found", f))
   }
+  # February-April of each January year: optional (NA until posted), but never duplicated
+  not_yet <- character(0)
+  for (n in as.integer(xwalk_years)) for (m in names(MAEXITS_SPRING_MONTHS)) {
+    f <- MAEXITS_SPRING_FOLDERS[[m]]
+    hits <- .cpsc_files(f, n, MAEXITS_SPRING_MONTHS[[m]])
+    if (length(hits) > 1) problems <- c(problems, sprintf("raw/%s: %d copies of CPSC_Enrollment_Info_%d_%02d.csv",
+                                                          f, length(hits), n, MAEXITS_SPRING_MONTHS[[m]]))
+    if (!length(hits)) not_yet <- c(not_yet, sprintf("%d-%02d", n, MAEXITS_SPRING_MONTHS[[m]]))
+  }
+  if (length(not_yet)) message("check_inputs: no CPSC file yet for ", paste(not_yet, collapse = ", "),
+                               "; those months are NA in the enrollment columns")
   .vcheck(length(problems) == 0,
           "inputs incomplete for crosswalk years %s:\n  - %s",
           paste(range(xwalk_years), collapse = "-"),
@@ -217,7 +229,8 @@ check_inputs <- function(xwalk_years = MAEXITS_XWALK_YEARS, exits_years = MAEXIT
           month_folder, paste(b[bad], collapse = ", "))
   yr <- vapply(m, `[`, "", 2)
   mo <- vapply(m, `[`, "", 3)
-  expect <- c("december enrollment" = "12", "january enrollment" = "01")[month_folder]
+  expect <- c("december enrollment" = "12", "january enrollment" = "01",
+              setNames(sprintf("%02d", MAEXITS_SPRING_MONTHS), MAEXITS_SPRING_FOLDERS))[month_folder]
   if (!is.na(expect)) {
     .vcheck(all(mo == expect), "raw/%s contains file(s) for the wrong month: %s",
             month_folder, paste(b[mo != expect], collapse = ", "))

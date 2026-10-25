@@ -5,15 +5,16 @@
 library(maexitsv2)
 library(ggplot2)
 
-e <- maexits_data("exits", variables = c("exit_type", "dec_enrollment", "sep_enrollment"))
+e <- maexits_data("exits", variables = c("exit_type", "dec_enrollment"))
+s <- maexits_data("exit_sept", variables = c("exit_type", "sep_enrollment"))
 
-share <- function(enr) e[!is.na(get(enr)), .(
+share <- function(e, enr) e[!is.na(get(enr)), .(
   total = sum(get(enr)),
   terminated = 100 * sum(get(enr)[exit_type == "terminated"]) / sum(get(enr)),
   sar = 100 * sum(get(enr)[exit_type == "service_area_reduction"]) / sum(get(enr)),
   both = 100 * sum(get(enr)[exit_type != "none"]) / sum(get(enr))), keyby = dec_year]
-sep <- share("sep_enrollment")
-dec <- share("dec_enrollment")
+sep <- share(s, "sep_enrollment")
+dec <- share(e, "dec_enrollment")
 gap <- sep[dec, on = "dec_year"][, both - i.both]
 
 types <- c(both = "Terminated or SAR", terminated = "Plan terminated", sar = "Service-area reduction (SAR)")

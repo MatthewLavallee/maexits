@@ -13,7 +13,7 @@
 #   8. add_benchmark()             → adds MA county benchmark
 #   9. augment_analytic()          → analytictable_augmented.csv
 #  10. make_county_panel()         → county_panel.csv
-#  11. run_data_pipeline()         → runs everything (steps 1-10)
+#  11. run_data_pipeline()         → runs everything (steps 1-12)
 # ============================================================
 
 
@@ -355,6 +355,12 @@ augment_analytic <- function(at = NULL, save = TRUE, verbose = TRUE,
   at[, sar_dropped := cls %in% "service_area_reduction" & !successor_serves]
   at[sar_dropped == TRUE,
      `:=`(jan_enrollment = 0, jan_enrollment_low = 0, jan_src = "dropped_county")]
+  spring <- intersect(names(MAEXITS_SPRING_MONTHS), sub("_src$", "", grep("_src$", names(at), value = TRUE)))
+  for (m in spring) {
+    src <- paste0(m, "_src")
+    at[sar_dropped == TRUE & !is.na(get(src)),
+       (c(paste0(m, c("_enrollment", "_enrollment_low")), src)) := list(0, 0, "dropped_county")]
+  }
 
   # Row-level exit flag: a terminated plan, or a SAR row that dropped the county
   at[, forced := cls %in% "terminated" | sar_dropped]
@@ -415,6 +421,15 @@ augment_analytic <- function(at = NULL, save = TRUE, verbose = TRUE,
                                       fifelse(carries_jan, 0, jan_enrollment))]
   at[, jan_enrollment_split := fifelse(carries_jan, jan_enrollment / curr_links,
                                        jan_enrollment)]
+  # February-April enrollment of the same successor plan-county: counted once
+  # on the January row that carries it (jan_first), shared across its links
+  for (m in spring) {
+    e <- at[[paste0(m, "_enrollment")]]
+    set(at, j = paste0(m, "_enrollment_once"),
+        value = fifelse(at$jan_first %in% TRUE, e, fifelse(carries_jan, 0, e)))
+    set(at, j = paste0(m, "_enrollment_split"),
+        value = fifelse(carries_jan, e / at$curr_links, e))
+  }
   at[, served_link := NULL]
 
   if (verbose) {
@@ -557,6 +572,22 @@ make_county_panel <- function(at = NULL, save = TRUE) {
                                                               forced_county %in% TRUE], na.rm = TRUE)
   ), by = .(county_name, state_name, dec_year)]
 
+  # February-April totals, each successor plan-county once; NA where the month
+  # is not yet posted for the transition (merged on after the derived columns)
+  spring_tot <- list()
+  for (m in intersect(names(MAEXITS_SPRING_MONTHS), sub("_enrollment_once$", "", names(at)))) {
+    e <- paste0(m, "_enrollment_once"); lo <- paste0(m, "_enrollment_low"); src <- paste0(m, "_src")
+    sp <- at[, .(tot = if (all(is.na(get(src)))) NA_real_ else sum(get(e), na.rm = TRUE),
+                 low = if (all(is.na(get(src)))) NA_real_ else sum(get(lo)[jan_first %in% TRUE], na.rm = TRUE),
+                 inc = if (all(is.na(get(src)))) NA_real_ else sum(get(e)[curr_is_incumbent %in% TRUE], na.rm = TRUE),
+                 new = if (all(is.na(get(src)))) NA_real_ else sum(get(e)[curr_is_incumbent %in% FALSE], na.rm = TRUE)),
+             by = .(county_name, state_name, dec_year)]
+    setnames(sp, c("tot", "low", "inc", "new"),
+             paste0(c("total_", "total_", "incumbent_", "new_entrant_"), m,
+                    c("_enrollment_once", "_enrollment_once_low", "_once", "_once")))
+    spring_tot[[m]] <- sp
+  }
+
   # Compute derived variables (NA when dec enrollment is 0 to avoid Inf)
   panel[, exit_rate := fifelse(total_dec_enrollment > 0,
     displaced_enrollment / total_dec_enrollment, NA_real_)]
@@ -596,6 +627,8 @@ make_county_panel <- function(at = NULL, save = TRUE) {
   panel[, pen_quartile := cut(penetration_2018, breaks = pen_breaks,
     labels = c("Q1 (lowest)", "Q2", "Q3", "Q4 (highest)"),
     include.lowest = TRUE)]
+  for (sp in spring_tot) panel <- merge(panel, sp, by = c("county_name", "state_name", "dec_year"),
+                                        all.x = TRUE, sort = FALSE)
 
   if (save) {
     fwrite(panel, here("trunk", "derived", "county_panel.csv"))
@@ -616,7 +649,7 @@ make_county_panel <- function(at = NULL, save = TRUE) {
 #' Runs all data construction steps in order, passing in-memory
 #' data.tables between steps. Inputs are checked first
 #' (\code{check_inputs()}), every step runs its validation checks, and
-#' nothing is written until the whole run has succeeded; the ten derived
+#' nothing is written until the whole run has succeeded; the derived
 #' tables are then written to a staging folder and moved into
 #' \code{out_dir} together, so a failed run never leaves a mix of old and
 #' new files.
@@ -643,13 +676,18 @@ run_data_pipeline <- function(save = TRUE, verbose = TRUE,
   last <- max(as.integer(xwalk_years))
   dec_enroll <- make_enrollment("december enrollment", save = FALSE, max_year = last - 1L)
   jan_enroll <- make_enrollment("january enrollment", save = FALSE, max_year = last)
+  # February-April of each January year (a month not yet posted stays NA)
+  spring_enroll <- lapply(MAEXITS_SPRING_FOLDERS, function(f) {
+    has <- length(list.files(here("raw", f), pattern = "CPSC_Enrollment_Info", recursive = TRUE)) > 0
+    if (has) make_enrollment(f, save = FALSE, max_year = last) else NULL
+  })
 
   message("\n=== Step 2: Building landscape ===")
   landscape <- make_landscape(save = FALSE, years = .landscape_years(xwalk_years))
 
   message("\n=== Step 3: Building analytic table ===")
   at <- make_analytic(landscape, dec_enroll, jan_enroll, save = FALSE,
-                      xwalk_years = xwalk_years)
+                      xwalk_years = xwalk_years, spring_enrollment = spring_enroll)
 
   message("\n=== Step 4: Adding FIPS and penetration ===")
   at_fp <- add_fips_and_penetration(at, save = FALSE)
@@ -671,18 +709,31 @@ run_data_pipeline <- function(save = TRUE, verbose = TRUE,
   displacement <- make_displacement(at_aug, landscape = landscape, plan_details = details,
                                     panel = panel, save = FALSE)
 
-  message("\n=== Step 10: Building exits table ===")
-  exits <- make_exits(at_aug, proxy_at = .proxy_augmented(exits_years), save = FALSE)
+  message("\n=== Step 10: Building exits tables (December and September) ===")
+  exits_both <- .build_exits(at_aug, proxy_at = .proxy_augmented(exits_years))
+  exits <- make_exits(save = FALSE, both = exits_both)
+  exit_sept <- make_exit_sept(save = FALSE, both = exits_both)
 
   message("\n=== Step 11: Building PDP exits table ===")
   pdp_exits <- make_pdp_exits(exits_years, xwalk_years = xwalk_years, save = FALSE)
 
+  message("\n=== Step 12: Building Medicare enrollment table ===")
+  medicare <- make_medicare_enrollment(save = FALSE)
+
+  message("\n=== Step 13: Building PBP supplemental benefits table ===")
+  pbp <- make_pbp_benefits(save = FALSE)
+
+  message("\n=== Step 14: Building plan information table ===")
+  plan_info <- make_plan_info(details, pbp, save = FALSE)
+
   if (save) {
     # analytictable.csv holds the table after FIPS and penetration (no
     # benchmark), as in the step-by-step path.
-    .write_derived(list(
+    spring_out <- setNames(spring_enroll, gsub(" ", "_", MAEXITS_SPRING_FOLDERS))
+    .write_derived(c(list(
       december_enrollment = dec_enroll,
-      january_enrollment = jan_enroll,
+      january_enrollment = jan_enroll),
+      spring_out[!vapply(spring_out, is.null, logical(1))], list(
       landscape = landscape,
       analytictable = at_fp,
       analytictable_augmented = at_aug,
@@ -690,8 +741,12 @@ run_data_pipeline <- function(save = TRUE, verbose = TRUE,
       plan_details = details,
       displacement = displacement,
       exits = exits,
-      pdp_exits = pdp_exits
-    ), out_dir)
+      exit_sept = exit_sept,
+      pdp_exits = pdp_exits,
+      medicare_enrollment = medicare,
+      pbp_benefits = pbp,
+      plan_info = plan_info
+    )), out_dir)
   }
 
   message("\n=== Pipeline complete ===")

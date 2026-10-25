@@ -361,7 +361,7 @@
 #' drug plans and Medicare-Medicaid Plans excluded), with the plan's
 #' organization, premiums, Part D deductible and benefit type, in-network
 #' out-of-pocket maximum (MOOP), star ratings and SNP details. See
-#' [plan_details] for every column and its coverage by year.
+#' [plan_info] for every column and its coverage by year.
 #'
 #' @param years Contract years (default: `MAEXITS_PLAN_DETAIL_FIRST_YEAR`
 #'   through the last landscape year).

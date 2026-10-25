@@ -44,6 +44,18 @@ A data.table with these columns:
 \item \code{exit_group_once}: Exit exposure from exit_rate_once, same bins as exit_group.
 \item \code{snp_dec_enrollment_once}: December enrollment in special needs plans (SNPs), each plan-county once.
 \item \code{snp_displaced_enrollment_once}: SNP December enrollment forced out (forced_county), each plan-county once.
+\item \code{total_feb_enrollment_once}: February MA enrollment of the January plans in the county (the successor plan-counties of plan_county, each once); NA until the February file is posted.
+\item \code{total_feb_enrollment_once_low}: As total_feb_enrollment_once, suppressed cells as 1 (lower bound).
+\item \code{incumbent_feb_once}: February enrollment of successor plan-counties that a December plan in the county continues into (curr_is_incumbent), each once.
+\item \code{new_entrant_feb_once}: All other February enrollment of the January plans, each plan-county once.
+\item \code{total_mar_enrollment_once}: March MA enrollment of the January plans in the county (the successor plan-counties of plan_county, each once); NA until the March file is posted.
+\item \code{total_mar_enrollment_once_low}: As total_mar_enrollment_once, suppressed cells as 1 (lower bound).
+\item \code{incumbent_mar_once}: March enrollment of successor plan-counties that a December plan in the county continues into (curr_is_incumbent), each once.
+\item \code{new_entrant_mar_once}: All other March enrollment of the January plans, each plan-county once.
+\item \code{total_apr_enrollment_once}: April MA enrollment of the January plans in the county (the successor plan-counties of plan_county, each once); NA until the April file is posted.
+\item \code{total_apr_enrollment_once_low}: As total_apr_enrollment_once, suppressed cells as 1 (lower bound).
+\item \code{incumbent_apr_once}: April enrollment of successor plan-counties that a December plan in the county continues into (curr_is_incumbent), each once.
+\item \code{new_entrant_apr_once}: All other April enrollment of the January plans, each plan-county once.
 }
 }
 \description{
@@ -63,6 +75,15 @@ totals for the same plans.
 
 Suppressed CMS cells (1-10 enrollees) count as 10; \verb{_low} columns count
 them as 1.
+}
+
+\section{Spring enrollment}{
+
+The \code{feb}, \code{mar} and \code{apr} columns give the same January plans'
+enrollment in February, March and April of the January year, after the
+Medicare Advantage Open Enrollment Period (January-March, effective the
+first of the next month). They are NA for a transition until CMS posts
+that month.
 }
 
 \seealso{

@@ -15,12 +15,13 @@
 #'
 #' Maintainer tool. Reads the derived tables in `derived_dir` and writes, to
 #' `out_dir`, the compressed files that [maexits_data()] downloads
-#' (`county_panel.rds`, `plan_county.rds`, `displacement.rds`, `exits.rds`, `pdp_exits.rds`,
-#' `plan_details.rds`, `landscape.rds`, `enrollment.rds`) and a
-#' `manifest.csv` with row counts and md5
-#' checksums. It adds a `plan_key` column ("H1234-001") to the plan-level
-#' tables and a `fips` column to the landscape and enrollment tables. Values
-#' are otherwise unchanged. Needs `raw/` for the FIPS lookup.
+#' (`county_panel.rds`, `plan_county.rds`, `displacement.rds`, `exits.rds`,
+#' `exit_sept.rds`, `pdp_exits.rds`, `plan_info.rds`) and a `manifest.csv`
+#' with row counts and md5 checksums. It adds a `plan_key` column
+#' ("H1234-001") to the plan-level tables. Values are otherwise unchanged.
+#' The other derived tables (landscape, enrollment, Medicare enrollment,
+#' plan details, PBP benefits) stay in `trunk/derived` and are not released
+#' separately.
 #'
 #' Upload every file in `out_dir` to a GitHub release named `release`, and
 #' set `MAEXITS_DATA_RELEASE` in R/config.R to that name.
@@ -34,16 +35,11 @@ prepare_data_release <- function(out_dir, derived_dir = here("trunk", "derived")
                                  release = MAEXITS_DATA_RELEASE) {
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
   src <- function(f) file.path(derived_dir, f)
-  lookup <- .fips_lookup()
 
   add_plan_key <- function(dt) {
     dt[, plan_key := fifelse(is.na(plan_id), NA_character_,
                              sprintf("%s-%03d", contract_id, as.integer(plan_id)))]
     setcolorder(dt, "plan_key", after = "plan_id")
-  }
-  attach_fips <- function(dt) {
-    dt[, fips := NA_integer_]
-    dt[lookup, fips := i.fips, on = .(county_name, state_name)]
   }
 
   tables <- list()
@@ -64,23 +60,15 @@ prepare_data_release <- function(out_dir, derived_dir = here("trunk", "derived")
   exits <- add_plan_key(fread(src("exits.csv"), na.strings = c("", "NA")))
   exits[, exit_type := factor(exit_type, levels = .EXIT_TYPES)]
   tables$exits <- exits
+  exit_sept <- add_plan_key(fread(src("exit_sept.csv"), na.strings = c("", "NA")))
+  exit_sept[, exit_type := factor(exit_type, levels = .EXIT_TYPES)]
+  tables$exit_sept <- exit_sept
   pdp <- add_plan_key(fread(src("pdp_exits.csv"), na.strings = c("", "NA")))
   pdp[, exit_type := factor(exit_type, levels = .EXIT_TYPES)]
   tables$pdp_exits <- pdp
-  details <- fread(src("plan_details.csv"), na.strings = c("", "NA"))
-  details[, contract_effective_date := as.Date(contract_effective_date)]
-  tables$plan_details <- add_plan_key(details)
-
-  landscape <- fread(src("landscape.csv"))
-  attach_fips(landscape)
-  tables$landscape <- add_plan_key(landscape)
-
-  dec <- fread(src("december_enrollment.csv"))[, month := sprintf("%d-12", year)]
-  jan <- fread(src("january_enrollment.csv"))[, month := sprintf("%d-01", year)]
-  enrollment <- rbind(dec, jan)
-  setcolorder(enrollment, c("month", "year"))
-  attach_fips(enrollment)
-  tables$enrollment <- add_plan_key(enrollment)
+  info <- fread(src("plan_info.csv"), na.strings = c("", "NA"))
+  info[, contract_effective_date := as.Date(contract_effective_date)]
+  tables$plan_info <- add_plan_key(info)
 
   commit <- tryCatch(system2("git", c("-C", shQuote(here()), "rev-parse", "--short", "HEAD"),
                              stdout = TRUE, stderr = FALSE), error = function(e) NA_character_)

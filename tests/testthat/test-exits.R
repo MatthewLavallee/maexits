@@ -1,5 +1,5 @@
-# The exits table: CMS's crosswalk exit for each December plan-county, with
-# December and September enrollment.
+# The exits and exit_sept tables: CMS's crosswalk exit for each December
+# plan-county, with December (exits) or September (exit_sept) enrollment.
 
 # Augmented analytic table for one transition; `scale` changes enrollment
 # only, as a different enrollment month would
@@ -33,11 +33,15 @@ exits_aug <- function(dec_year = 2025L, scale = 1, h0011_status = NULL) {
   augment_analytic(at, save = FALSE, verbose = FALSE, landscape = ls, xwalk_years = dec_year + 1L)
 }
 
-test_that("exit_type follows CMS's labels, and both months are attached", {
+test_that("exit_type follows CMS's labels; exits has December years, exit_sept all years", {
   dec <- exits_aug(2025L)
   sep <- rbind(exits_aug(2025L, scale = 2), exits_aug(2026L, scale = 3), fill = TRUE)
-  ex <- suppressMessages(make_exits(dec, proxy_at = sep, save = FALSE))
+  ex <- suppressMessages(make_exit_sept(dec, proxy_at = sep, save = FALSE))
+  dx <- suppressMessages(make_exits(dec, proxy_at = sep, save = FALSE))
   expect_equal(nrow(ex), 12L)
+  expect_equal(unique(dx$dec_year), 2025L)
+  expect_false(any(grepl("^sep_", names(dx))) || any(grepl("^dec_enr|^dec_src", names(ex))))
+  expect_equal(dx[, .(contract_id, county_name, exit_type)], ex[dec_year == 2025L, .(contract_id, county_name, exit_type)])
   expect_false(anyDuplicated(ex, by = c("dec_year", "contract_id", "plan_id", "county_name")) > 0)
   e <- ex[dec_year == 2025L]
   type <- function(c, cty = "Frederick") e[contract_id == c & county_name == cty, exit_type]
@@ -49,9 +53,8 @@ test_that("exit_type follows CMS's labels, and both months are attached", {
   expect_equal(type("H0016"), "none")                        # mapped to a New Plan elsewhere: not a termination
   expect_equal(e[contract_id == "H0016", xwalk_statuses], "New Plan")
   expect_equal(e[contract_id == "H0015", xwalk_statuses], "Terminated/Non-renewed Contract")
-  expect_equal(e$sep_enrollment, 2L * e$dec_enrollment)
-  expect_true(is.integer(ex$sep_enrollment) && is.integer(ex$dec_enrollment))
-  expect_true(all(is.na(ex[dec_year == 2026L, dec_enrollment])))   # December not out yet
+  expect_equal(e$sep_enrollment, 2L * dx$dec_enrollment)
+  expect_true(is.integer(ex$sep_enrollment) && is.integer(dx$dec_enrollment))
   expect_equal(ex[dec_year == 2026L & exit_type != "none", sum(sep_enrollment)], 3L * (20L + 25L))
   expect_true(all(is.na(ex$snp_type)))                       # non-SNPs carry no SNP type
 })
@@ -60,7 +63,7 @@ test_that("December and September must agree on the plan-counties and exit types
   dec <- exits_aug(2025L)
   expect_error(suppressMessages(make_exits(dec, proxy_at = exits_aug(2024L), save = FALSE)),
                "no September enrollment for dec_year 2025")
-  expect_error(suppressMessages(make_exits(dec, proxy_at = exits_aug(2025L, h0011_status = "Terminated/Non-renewed Contract"),
+  expect_error(suppressMessages(make_exit_sept(dec, proxy_at = exits_aug(2025L, h0011_status = "Terminated/Non-renewed Contract"),
                                            save = FALSE)),
                "different plan-counties or exit types for 1 plan-counties")
 })
