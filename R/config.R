@@ -190,7 +190,7 @@ MAEXITS_FIPS_LOOKUP_FILE <- file.path(
 # Publish a new release (prepare_data_release()) whenever the derived
 # tables change, and point this at it.
 MAEXITS_DATA_REPO <- "MatthewLavallee/maexits"
-MAEXITS_DATA_RELEASE <- "data-2018-2025"  # dec_year 2018-2025
+MAEXITS_DATA_RELEASE <- "data-2018-2025-v2"  # dec_year 2018-2025
 
 # Where CMS publishes Monthly Enrollment by Contract/Plan/State/County
 # (monthly-enrollment-cpsc-<month>-<year>.zip; this pattern starts with

@@ -70,6 +70,6 @@ Each dataset has a help page (`?displacement`), and [DATA_DICTIONARY.md](DATA_DI
 
 ## Building the data
 
-The tables come from the GitHub release [`data-2018-2025`](https://github.com/MatthewLavallee/maexits/releases/tag/data-2018-2025) and are rebuilt from the CMS and NBER files with `run_data_pipeline()`. [PIPELINE.md](PIPELINE.md) covers the source files, the build, the yearly update and `check_cms_releases()`, which reports when CMS posts next year's files.
+The tables come from the GitHub release [`data-2018-2025-v2`](https://github.com/MatthewLavallee/maexits/releases/tag/data-2018-2025-v2) and are rebuilt from the CMS and NBER files with `run_data_pipeline()`. [PIPELINE.md](PIPELINE.md) covers the source files, the build, the yearly update and `check_cms_releases()`, which reports when CMS posts next year's files.
 
 MIT license.

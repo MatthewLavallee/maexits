@@ -30,7 +30,7 @@ maexitsv2/
 │   ├── globals.R, maexitsv2-package.R   # package plumbing
 ├── LICENSE, LICENSE.md          # MIT
 ├── tests/testthat/             # failure-mode tests + opt-in full-rebuild regression test
-├── provenance/                 # md5 manifest of raw/ and the derived tables (data release data-2018-2025)
+├── provenance/                 # md5 manifest of raw/ and the derived tables (data release data-2018-2025-v2)
 ├── man/                         # roxygen2-generated .Rd documentation; man/figures holds the README figure
 ├── tools/readme-figure.R        # draws the README figure from the exits table
 ├── trunk/
@@ -49,7 +49,7 @@ There are three ways to obtain the analysis data, in order of convenience:
 **(a) Quickest — download the derived tables from the data release.** From the repository root:
 
 ```bash
-gh release download data-2018-2025 -R MatthewLavallee/maexits -p derived_data.zip
+gh release download data-2018-2025-v2 -R MatthewLavallee/maexits -p derived_data.zip
 unzip derived_data.zip
 ```
 
@@ -193,7 +193,7 @@ Filename specifics enforced by the code (set in `R/config.R`):
 - **Crosswalks:** each year's exact file is registered in `MAEXITS_XWALK_FILES`. The 2025 crosswalk is registered as `PlanCrosswalk2024_10012024.txt`, which is how CMS named it. The status vocabulary is checked against `MAEXITS_XWALK_STATUS_CLASS`.
 - **Landscape:** CY2016-CY2023 are read by globbing `*.csv` under each `CYxxxx/` folder, grepping filenames for `MA` vs `SNP`, and checking each file's columns. CY2024 uses its four fixed files. CY2025 and later use the file registered in `MAEXITS_LANDSCAPE_FILES`. CY2026 is pinned to the `202509` vintage behind the committed tables; CY2027 is CMS's first CY2027 posting (`cy2027-landscape-202609-1.zip`).
 - The `raw/landscape/2006-2024` and `CY2013`-`CY2015` folders on disk are not read by the current pipeline (it starts at CY2016) and are not required.
-- `provenance/raw_manifest_data-2018-2025.csv` records the size and md5 of every raw file behind the committed derived tables (data release `data-2018-2025`).
+- `provenance/raw_manifest_data-2018-2025-v2.csv` records the size and md5 of every raw file behind the committed derived tables (data release `data-2018-2025-v2`).
 
 Repo distribution reminder: `raw/` is gitignored. To run from raw inputs, recreate the tree above and call `run_data_pipeline()`. To skip the ~6 GB rebuild, download `derived_data.zip` from the data release and unzip it at the repo root to restore `trunk/derived/*.csv`; `trunk/derived/county_panel.csv` is also committed uncompressed.
 
@@ -312,7 +312,7 @@ Score a proxy month against a completed year before quoting it with `backtest_pr
 ```r
 testthat::test_dir("tests/testthat")                      # failure-mode tests (seconds)
 Sys.setenv(MAEXITS_FULL_REBUILD = "true")                  # + full rebuild from raw/ (~11 min),
-testthat::test_dir("tests/testthat")                      #   checked against provenance/derived_md5_data-2018-2025.txt
+testthat::test_dir("tests/testthat")                      #   checked against provenance/derived_md5_data-2018-2025-v2.txt
 ```
 
 ## Outputs & data dictionary

@@ -1,4 +1,4 @@
-# Derived tables of the 2018-2025 build (crosswalk years 2019-2026, exits 2019-2027, February-April enrollment), reproduced byte-for-byte from raw/ with zero warnings, 2026-10-25
+# Derived tables of data release data-2018-2025-v2 (crosswalk years 2019-2026, exits 2019-2027, February-April enrollment), reproduced byte-for-byte from raw/ with zero warnings, 2026-10-25
 f380282ab450d6bf629007856cf26b91 trunk/derived/analytictable.csv
 108516f5370e439d585b9d05d7f59372 trunk/derived/analytictable_augmented.csv
 65ad8ff84b5971c49b49c95b1c1822cd trunk/derived/county_panel.csv
